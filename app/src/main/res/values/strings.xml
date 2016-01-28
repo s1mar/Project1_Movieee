@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">"Movieee "</string>
+    <string name="image_view_content_description">Movie Image</string>
+    <string name="action_select_filter">Select filter</string>
+    <string-array name="spinner_entries">
+        <item>Select Filter</item>
+        <item>Popular Movies</item>
+        <item>Rated R</item>
+        <item>Popular With Kids</item>
+        <item>Release Of The Year</item>
+    </string-array>
+</resources>
