@@ -174,6 +174,7 @@ def cmd_watch(args, cfg):
     live_keys = {s.key(cfg.theatre_id) for s in cfg.showtimes}
     alerts_sent = 0
     passes = 0
+    gone: set[str] = set()
 
     while True:
         passes += 1
@@ -186,6 +187,7 @@ def cmd_watch(args, cfg):
             except (NotFound, PostShowtime):
                 print(f"  {showtime.label or showtime.id}: gone; skipping")
                 state.note_health(key, True)
+                gone.add(key)
                 continue
             except CineplexError as exc:
                 matches, healthy, problem = [], False, str(exc)
@@ -226,7 +228,24 @@ def cmd_watch(args, cfg):
                     print(f"  !! no channel delivered; will retry next pass")
             state.record(key, labels, alerted)
 
-        state.prune(live_keys)
+        # Every screening has been and gone. Without this the watcher would
+        # poll an empty list forever, and silence would read as "no seats"
+        # when it actually means "nothing left to watch".
+        if cfg.showtimes and gone >= live_keys:
+            if state.note_health("__watchlist__", False, warn_after=1):
+                nudge = Alert(
+                    title="seatwatch has nothing left to watch",
+                    body=(f"All {len(live_keys)} watched showtime(s) have "
+                          f"screened or been delisted.\n\nAdd more with "
+                          f"`seatwatch add-showtime --url ...`, or enable "
+                          f"[discovery] with an API key."),
+                    url=cfg.booking_url, priority="default")
+                if dispatch(nudge):
+                    print("  >> watchlist-empty notice sent")
+        elif gone < live_keys:
+            state.note_health("__watchlist__", True)
+
+        state.prune(live_keys | {"__watchlist__"})
         state.save()
 
         if passes >= passes_planned or time.time() + interval >= deadline:

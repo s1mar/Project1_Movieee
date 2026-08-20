@@ -198,6 +198,25 @@ url = "https://example.invalid/seats"
         self.assertEqual(self.run_cli("watch"), 0)
         self.assertEqual(STATE["pushes"], [])
 
+    def test_expired_showtime_triggers_a_watchlist_notice(self):
+        # isPostShowtime means the screening has been and gone. Going quiet
+        # would be indistinguishable from "no seats free".
+        STATE["payload"] = {"seatAvailabilities": {}, "isPostShowtime": True}
+        self.assertEqual(self.run_cli("watch"), 0)
+        titles = [p["title"] for p in STATE["pushes"]]
+        self.assertEqual(len(titles), 1)
+        self.assertIn("nothing left to watch", titles[0])
+
+    def test_watchlist_notice_does_not_repeat(self):
+        STATE["payload"] = {"seatAvailabilities": {}, "isPostShowtime": True}
+        for _ in range(4):
+            self.run_cli("watch")
+        self.assertEqual(len(STATE["pushes"]), 1)
+
+    def test_a_live_showtime_suppresses_the_notice(self):
+        self.run_cli("watch")
+        self.assertEqual([p["title"] for p in STATE["pushes"]], [])
+
     def test_configured_priority_reaches_ntfy(self):
         self.run_cli("watch")
         STATE["payload"] = CANCELLATION
