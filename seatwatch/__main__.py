@@ -169,7 +169,7 @@ def _build_alert(cfg, showtime, matches, first_run):
     title = f"{count} {seat_word} {verb} - {when}"
     lines = [
         f"{cfg.theatre_name or 'Cineplex'} - {when}",
-        f"Rows {cfg.criteria.min_row}+ , middle of the row:",
+        f"Rows {cfg.criteria.min_row}+, middle of the row:",
         "",
         _describe(matches, limit=12),
         "",
