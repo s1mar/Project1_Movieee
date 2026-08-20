@@ -5,7 +5,8 @@ import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 
-from seatwatch.discovery import dates_ahead, find_showtimes
+from seatwatch.discovery import (dates_ahead, describe_shape,
+                                 find_showtimes)
 
 # The showtimes feed is key-gated and its real shape has not been observed,
 # so these cover the shapes the parser is written to tolerate rather than a
@@ -95,3 +96,36 @@ class DatesAheadTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class DescribeShapeTests(unittest.TestCase):
+    def test_outlines_nesting_with_types(self):
+        lines = describe_shape({"a": {"b": [1, 2]}})
+        joined = "\n".join(lines)
+        self.assertIn("a: dict", joined)
+        self.assertIn("b: list[2]", joined)
+
+    def test_prints_structure_not_values(self):
+        secret = "super-secret-token-value"
+        lines = describe_shape({"key": secret, "n": 42})
+        joined = "\n".join(lines)
+        self.assertNotIn(secret, joined)
+        self.assertNotIn("42", joined)
+        self.assertIn("key: str", joined)
+
+    def test_depth_is_bounded(self):
+        deep = {}
+        node = deep
+        for i in range(20):
+            node["child"] = {}
+            node = node["child"]
+        self.assertIn("...", "\n".join(describe_shape(deep)))
+
+    def test_wide_dicts_are_truncated(self):
+        wide = {f"k{i}": i for i in range(30)}
+        self.assertIn("more keys", "\n".join(describe_shape(wide)))
+
+    def test_empty_and_scalar_inputs_are_safe(self):
+        self.assertTrue(describe_shape([]))
+        self.assertTrue(describe_shape({}) == [])
+        self.assertTrue(describe_shape("x"))

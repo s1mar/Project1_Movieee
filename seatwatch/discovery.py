@@ -93,3 +93,30 @@ def dates_ahead(days: int, today: datetime.date | None = None) -> list[str]:
     start = today or datetime.date.today()
     return [(start + datetime.timedelta(days=i)).isoformat()
             for i in range(max(1, days))]
+
+
+def describe_shape(node, depth: int = 0, max_depth: int = 4) -> list[str]:
+    """A keys-and-types outline of a payload, without the payload.
+
+    When discovery parses nothing, this goes to the log so the mismatch can
+    be diagnosed from a CI run. It deliberately prints structure, never
+    values, so nothing sensitive ends up in a public build log.
+    """
+    pad = "  " * depth
+    if depth >= max_depth:
+        return [f"{pad}..."]
+    if isinstance(node, dict):
+        lines = []
+        for key, value in list(node.items())[:12]:
+            kind = type(value).__name__
+            if isinstance(value, (dict, list)):
+                lines.append(f"{pad}{key}: {kind}[{len(value)}]")
+                lines.extend(describe_shape(value, depth + 1, max_depth))
+            else:
+                lines.append(f"{pad}{key}: {kind}")
+        if len(node) > 12:
+            lines.append(f"{pad}... +{len(node) - 12} more keys")
+        return lines
+    if isinstance(node, list):
+        return describe_shape(node[0], depth, max_depth) if node else [f"{pad}(empty)"]
+    return [f"{pad}{type(node).__name__}"]

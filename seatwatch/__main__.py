@@ -20,7 +20,7 @@ from . import config as config_mod
 from .config import Showtime
 from .cineplex import (SEAT_AVAILABILITY, SEAT_LAYOUT, CineplexError, Client,
                        NotFound, PostShowtime)
-from .discovery import dates_ahead, find_showtimes
+from .discovery import dates_ahead, describe_shape, find_showtimes
 from .notify import Alert, dispatch
 from .seats import Match, extract_seats, match_seats, parse_seatmap
 from .urlparse_ids import extract as extract_ids
@@ -110,12 +110,14 @@ def discover_showtimes(cfg, client) -> list:
 
     location = cfg.location_id or cfg.theatre_id
     found: dict[str, Showtime] = {}
+    sample = None
     for date in dates_ahead(cfg.discover_days):
         try:
             payload = client.showtimes(location, date)
         except CineplexError as exc:
             print(f"  discovery failed for {date}: {str(exc)[:120]}")
             continue
+        sample = sample if sample is not None else payload
         for hit in find_showtimes(payload, cfg.film_id):
             found.setdefault(hit.id, Showtime(
                 id=hit.id, label=hit.label,
@@ -124,9 +126,13 @@ def discover_showtimes(cfg, client) -> list:
     if found:
         print(f"  discovered {len(found)} showtime(s) over "
               f"{cfg.discover_days} day(s)")
-    else:
-        print("  discovery returned nothing; run "
-              "`seatwatch discover --date <YYYY-MM-DD>` to see the payload")
+    elif sample is not None:
+        # The showtimes shape is unverified. Print its outline (keys and
+        # types only, never values) so a failed parse is diagnosable from
+        # the run log instead of needing a local repro.
+        print("  discovery parsed 0 showtimes. Payload outline:")
+        for line in describe_shape(sample)[:40]:
+            print(f"    {line}")
     return list(found.values())
 
 
