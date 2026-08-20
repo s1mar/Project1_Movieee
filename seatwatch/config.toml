@@ -34,10 +34,10 @@ include_accessible = false
 min_adjacent = 1
 
 [alerts]
-# ntfy priority. "high" (4) is a normal loud notification. Use "max" to
-# punch through Do Not Disturb - worth it if you want a 9am Saturday
-# cancellation to actually wake you.
-priority = "high"
+# ntfy priority. "max" (5) punches through Do Not Disturb, so an early
+# cancellation actually wakes you. Drop to "high" for a normal loud
+# notification that respects DND.
+priority = "max"
 
 [poll]
 # One workflow run polls every 45s for ~4.5 minutes, so a 5-minute cron

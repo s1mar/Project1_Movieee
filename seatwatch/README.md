@@ -111,9 +111,9 @@ drop to `0.3` if you're fussy. Alerts are ranked most-central first.
 
 ## Alert behaviour
 
-Alerts go out at ntfy priority `high` by default, which is loud but does
-**not** pierce Do Not Disturb. Set `priority = "max"` under `[alerts]` if you
-want an early-morning cancellation to actually wake you.
+Alerts go out at ntfy priority `max`, which pierces Do Not Disturb so an
+early-morning cancellation actually wakes you. Drop `priority` under
+`[alerts]` to `"high"` for a loud notification that still respects DND.
 
 Silence is meant to mean "no seats", so it must not also mean "the endpoint
 changed and nothing works". After `health_warn_after` consecutive failed
