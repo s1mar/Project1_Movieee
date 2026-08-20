@@ -57,7 +57,9 @@ jobs:
           echo "state is $(wc -c < state/state.json) bytes"
 
       - name: Poll for seats
-        if: steps.gate.outputs.ready == 'true'
+        # test-alert needs no showtimes - it exists to prove the notification
+        # path works, which you want to check BEFORE configuring anything.
+        if: steps.gate.outputs.ready == 'true' || inputs.mode == 'test-alert'
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           NTFY_SERVER: ${{ secrets.NTFY_SERVER }}
