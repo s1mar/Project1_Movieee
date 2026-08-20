@@ -52,6 +52,10 @@ state_path = "state/state.json"
 # After this many consecutive failed polls, send a "seatwatch is broken"
 # notice. Otherwise a dead endpoint looks exactly like a sold-out show.
 health_warn_after = 3
+# Cap on seat requests per run. Watching a week of slots at the
+# single-showtime cadence would be thousands of requests an hour against
+# Cineplex; the run spreads whatever passes it can afford instead.
+max_requests_per_run = 30
 
 [api]
 base_url = "https://apis.cineplex.com"
@@ -60,7 +64,16 @@ base_url = "https://apis.cineplex.com"
 availability_path = ""
 layout_path = ""
 
-# One block per screening you want watched.
+[discovery]
+# Watch every Odyssey showtime at this theatre over the next N days instead
+# of listing them by hand. Needs CINEPLEX_API_KEY as a repo secret - the
+# showtimes feed is the one Cineplex endpoint that requires a key. With it
+# off (or the key missing), only the [[showtimes]] blocks below are watched.
+enabled = true
+days = 7
+
+# One block per screening you want watched. Discovery adds to these, it does
+# not replace them.
 # [[showtimes]]
 # id = "123456"
 # label = "Fri 21 Aug, 7:00 PM"

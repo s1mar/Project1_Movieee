@@ -114,6 +114,30 @@ If Cineplex changes the shape, `dump` prints both payloads next to what the
 parser made of them, and the health warning below means you find out rather
 than assuming the show is just full.
 
+## Watching many showtimes
+
+`[discovery]` watches every Odyssey showtime at the theatre over the next
+`days` days, instead of you listing each one. It needs `CINEPLEX_API_KEY`,
+because the showtimes feed is the one Cineplex endpoint that requires a key
+— the open ticketing endpoints only answer questions about a showtime you
+can already name. Without the key it prints why and falls back to the
+`[[showtimes]]` blocks, rather than failing.
+
+Polling every showtime on every pass does not scale. A week of slots at the
+single-showtime cadence would be ~2,300 requests an hour against someone
+else's ticketing API. Each run gets a `max_requests_per_run` budget and
+spreads whatever passes it can afford across its window:
+
+| Showtimes | Passes | Interval | Requests/hour |
+|---|---|---|---|
+| 1 | 7 | 45s | ~84 |
+| 4 | 7 | 45s | ~336 |
+| 12 | 2 | 135s | ~288 |
+| 28 | 1 | 45s | ~336 |
+
+So a single showtime is still checked every 45 seconds, and a week of slots
+each get checked about once per cron fire, with total load roughly flat.
+
 ## Criteria
 
 ```toml

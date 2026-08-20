@@ -39,6 +39,8 @@ class Config:
     alert_on_first_run: bool = True
     state_path: str = "state.json"
     health_warn_after: int = 3
+    max_requests_per_run: int = 30
+    discover_days: int = 0
     base_url: str = "https://apis.cineplex.com"
     availability_path: str = ""
     layout_path: str = ""
@@ -57,6 +59,7 @@ def load(path: str | pathlib.Path | None = None) -> Config:
     poll = raw.get("poll", {})
     api = raw.get("api", {})
     alerts = raw.get("alerts", {})
+    disc = raw.get("discovery", {})
 
     cfg = Config(
         theatre_id=str(theatre.get("id", "")),
@@ -83,6 +86,8 @@ def load(path: str | pathlib.Path | None = None) -> Config:
         alert_on_first_run=bool(poll.get("alert_on_first_run", True)),
         state_path=poll.get("state_path", "state.json"),
         health_warn_after=int(poll.get("health_warn_after", 3)),
+        max_requests_per_run=int(poll.get("max_requests_per_run", 30)),
+        discover_days=int(disc.get("days", 0)) if disc.get("enabled") else 0,
         base_url=api.get("base_url", "https://apis.cineplex.com"),
         availability_path=api.get("availability_path", ""),
         layout_path=api.get("layout_path", ""),

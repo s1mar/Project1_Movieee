@@ -17,8 +17,10 @@ import sys
 import time
 
 from . import config as config_mod
+from .config import Showtime
 from .cineplex import (SEAT_AVAILABILITY, SEAT_LAYOUT, CineplexError, Client,
                        NotFound, PostShowtime)
+from .discovery import dates_ahead, find_showtimes
 from .notify import Alert, dispatch
 from .seats import Match, extract_seats, match_seats, parse_seatmap
 from .urlparse_ids import extract as extract_ids
@@ -92,12 +94,75 @@ def cmd_check(args, cfg):
     return 0
 
 
+def discover_showtimes(cfg, client) -> list:
+    """Every showtime for the configured film over the next N days.
+
+    Needs CINEPLEX_API_KEY - the showtimes feed is the one gated endpoint.
+    Returns [] (and says why) rather than failing the run, so a missing key
+    degrades to the hand-listed showtimes instead of breaking the watcher.
+    """
+    if not cfg.discover_days:
+        return []
+    if not cfg.api_key:
+        print("  discovery is on but CINEPLEX_API_KEY is unset; "
+              "falling back to the showtimes listed in config.toml")
+        return []
+
+    location = cfg.location_id or cfg.theatre_id
+    found: dict[str, Showtime] = {}
+    for date in dates_ahead(cfg.discover_days):
+        try:
+            payload = client.showtimes(location, date)
+        except CineplexError as exc:
+            print(f"  discovery failed for {date}: {str(exc)[:120]}")
+            continue
+        for hit in find_showtimes(payload, cfg.film_id):
+            found.setdefault(hit.id, Showtime(
+                id=hit.id, label=hit.label,
+                url=f"https://www.cineplex.com/ticketing/preview"
+                    f"?theatreId={location}&showtimeId={hit.id}"))
+    if found:
+        print(f"  discovered {len(found)} showtime(s) over "
+              f"{cfg.discover_days} day(s)")
+    else:
+        print("  discovery returned nothing; run "
+              "`seatwatch discover --date <YYYY-MM-DD>` to see the payload")
+    return list(found.values())
+
+
+def plan_cadence(cfg, showtime_count: int) -> tuple[int, int]:
+    """How many passes to make, and how long to wait between them.
+
+    Polling every showtime on every pass does not scale: a week of slots at
+    the single-showtime cadence would be thousands of requests an hour
+    against someone else's ticketing API. The run gets a request budget and
+    spreads whatever passes it can afford across its duration instead.
+    """
+    count = max(1, showtime_count)
+    affordable = max(1, cfg.max_requests_per_run // count)
+    by_time = max(1, cfg.duration_seconds // cfg.interval_seconds + 1)
+    passes = min(affordable, by_time)
+    interval = (max(cfg.interval_seconds, cfg.duration_seconds // passes)
+                if passes > 1 else cfg.interval_seconds)
+    return passes, int(interval)
+
+
 def cmd_watch(args, cfg):
     client = _client(cfg)
     state = State.load(cfg.state_path)
+
+    discovered = discover_showtimes(cfg, client)
+    known = {s.id for s in cfg.showtimes}
+    cfg.showtimes = cfg.showtimes + [s for s in discovered if s.id not in known]
+
     if not cfg.showtimes:
-        print("No showtimes configured. Add them to seatwatch/config.toml.")
+        print("No showtimes configured. Add them to seatwatch/config.toml "
+              "or enable [discovery] with an API key.")
         return 2
+
+    passes_planned, interval = plan_cadence(cfg, len(cfg.showtimes))
+    print(f"{len(cfg.showtimes)} showtime(s): {passes_planned} pass(es) "
+          f"every {interval}s (budget {cfg.max_requests_per_run} req/run)")
 
     deadline = time.time() + cfg.duration_seconds
     live_keys = {s.key(cfg.theatre_id) for s in cfg.showtimes}
@@ -158,9 +223,9 @@ def cmd_watch(args, cfg):
         state.prune(live_keys)
         state.save()
 
-        if time.time() + cfg.interval_seconds >= deadline:
+        if passes >= passes_planned or time.time() + interval >= deadline:
             break
-        time.sleep(cfg.interval_seconds)
+        time.sleep(interval)
 
     print(f"\nDone: {passes} passes, {alerts_sent} alert(s) sent.")
     return 0
