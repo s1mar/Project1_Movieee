@@ -33,6 +33,12 @@ include_accessible = false
 # Raise to 2 to only hear about pairs of seats side by side.
 min_adjacent = 1
 
+[alerts]
+# ntfy priority. "high" (4) is a normal loud notification. Use "max" to
+# punch through Do Not Disturb - worth it if you want a 9am Saturday
+# cancellation to actually wake you.
+priority = "high"
+
 [poll]
 # One workflow run polls every 45s for ~4.5 minutes, so a 5-minute cron
 # gives near-continuous coverage instead of a single snapshot every 5 min.
@@ -43,6 +49,9 @@ cooldown_seconds = 21600
 # Tell me about seats that are already free the very first time this runs.
 alert_on_first_run = true
 state_path = "state/state.json"
+# After this many consecutive failed polls, send a "seatwatch is broken"
+# notice. Otherwise a dead endpoint looks exactly like a sold-out show.
+health_warn_after = 3
 
 [api]
 base_url = "https://apis.cineplex.com"

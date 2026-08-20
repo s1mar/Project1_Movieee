@@ -77,6 +77,28 @@ class State:
         entry["alerted"] = {k: v for k, v in entry.get("alerted", {}).items()
                             if v > cutoff}
 
+    def note_health(self, key: str, ok: bool, warn_after: int = 3,
+                    quiet_seconds: int = 24 * 3600,
+                    now: float | None = None) -> bool:
+        """Track consecutive bad polls. True when it's time to warn.
+
+        Without this, a broken endpoint is indistinguishable from a sold-out
+        show: both are silence. Silence should mean "no seats", not "no idea".
+        """
+        now = time.time() if now is None else now
+        entry = self._entry(key)
+        if ok:
+            entry["failures"] = 0
+            return False
+        entry["failures"] = entry.get("failures", 0) + 1
+        if entry["failures"] < warn_after:
+            return False
+        last = entry.get("last_health_warning")
+        if last is not None and now - last < quiet_seconds:
+            return False
+        entry["last_health_warning"] = now
+        return True
+
     def prune(self, live_keys: set[str]) -> None:
         """Drop showtimes that no longer exist (screened or delisted)."""
         shows = self.data.get("showtimes", {})

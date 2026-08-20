@@ -42,6 +42,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         STATE["pushes"].append({
             "path": self.path,
             "title": self.headers.get("Title", ""),
+            "priority": self.headers.get("Priority", ""),
             "click": self.headers.get("Click", ""),
             "body": self.rfile.read(length).decode(),
         })
@@ -81,11 +82,15 @@ booking_url = "https://example.invalid/book"
 min_row = "E"
 max_centre_offset = 0.5
 
+[alerts]
+priority = "max"
+
 [poll]
 interval_seconds = 20
 duration_seconds = 0
 cooldown_seconds = 21600
 alert_on_first_run = true
+health_warn_after = 3
 state_path = "{self.tmp.name}/state.json"
 
 [api]
@@ -158,6 +163,36 @@ url = "https://example.invalid/seats"
         STATE["payload"] = {}
         self.assertEqual(self.run_cli("watch"), 0)
         self.assertEqual(STATE["pushes"], [])
+
+    def test_configured_priority_reaches_ntfy(self):
+        self.run_cli("watch")
+        STATE["payload"] = CANCELLATION
+        self.run_cli("watch")
+        self.assertEqual(STATE["pushes"][0]["priority"], "max")
+
+    def test_a_broken_endpoint_warns_instead_of_going_quiet(self):
+        # An unparseable payload must not read as "no seats available".
+        STATE["payload"] = {"unexpected": "shape"}
+        for _ in range(3):
+            self.run_cli("watch")
+        self.assertEqual(len(STATE["pushes"]), 1)
+        self.assertIn("broken", STATE["pushes"][0]["title"])
+
+    def test_health_warning_does_not_repeat(self):
+        STATE["payload"] = {"unexpected": "shape"}
+        for _ in range(6):
+            self.run_cli("watch")
+        self.assertEqual(len(STATE["pushes"]), 1)
+
+    def test_recovery_still_alerts_normally(self):
+        STATE["payload"] = {"unexpected": "shape"}
+        for _ in range(3):
+            self.run_cli("watch")
+        STATE["payload"] = CANCELLATION
+        self.run_cli("watch")
+        titles = [p["title"] for p in STATE["pushes"]]
+        self.assertEqual(len(titles), 2)
+        self.assertIn("just opened up", titles[1])
 
 
 if __name__ == "__main__":

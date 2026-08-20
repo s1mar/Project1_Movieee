@@ -72,3 +72,42 @@ class StateTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class HealthTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.path = pathlib.Path(self.tmp.name) / "state.json"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_a_single_failure_is_not_worth_warning_about(self):
+        s = State.load(self.path)
+        self.assertFalse(s.note_health(KEY, False, warn_after=3, now=1000))
+
+    def test_warns_once_the_threshold_is_crossed(self):
+        s = State.load(self.path)
+        self.assertFalse(s.note_health(KEY, False, warn_after=3, now=1000))
+        self.assertFalse(s.note_health(KEY, False, warn_after=3, now=1100))
+        self.assertTrue(s.note_health(KEY, False, warn_after=3, now=1200))
+
+    def test_does_not_nag_after_warning(self):
+        s = State.load(self.path)
+        for t in (1000, 1100, 1200):
+            s.note_health(KEY, False, warn_after=3, now=t)
+        self.assertFalse(s.note_health(KEY, False, warn_after=3, now=1300))
+
+    def test_nags_again_after_the_quiet_period(self):
+        s = State.load(self.path)
+        for t in (1000, 1100, 1200):
+            s.note_health(KEY, False, warn_after=3, now=t)
+        self.assertTrue(s.note_health(KEY, False, warn_after=3,
+                                      quiet_seconds=3600, now=1000 + 7200))
+
+    def test_a_good_poll_resets_the_streak(self):
+        s = State.load(self.path)
+        s.note_health(KEY, False, warn_after=3, now=1000)
+        s.note_health(KEY, False, warn_after=3, now=1100)
+        s.note_health(KEY, True, warn_after=3, now=1200)
+        self.assertFalse(s.note_health(KEY, False, warn_after=3, now=1300))

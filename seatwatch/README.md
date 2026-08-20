@@ -86,10 +86,13 @@ workflows from the default branch — on a feature branch nothing fires.
 The parser has full unit and integration coverage against fixtures and a
 local fake API, but it has **never been run against the live Cineplex
 endpoint** — that couldn't be verified from the environment this was built
-in. So the first thing to run is `dump`. If it prints seats, you're done. If
-it prints `parsed 0 seats`, paste the JSON it dumped and the field names in
-`seats.py` (`_ROW_KEYS`, `_COL_KEYS`, `_AVAIL_KEYS`, `_STATUS_KEYS`) can be
-adjusted in a minute — that's the only place the payload shape is assumed.
+in — a headless browser can't reach the network there, and the API can't be
+probed directly. So the first thing to run is `dump`. If it prints seats,
+you're done. If it prints `parsed 0 seats`, paste the JSON it dumped and the
+field names in `seats.py` (`_ROW_KEYS`, `_COL_KEYS`, `_AVAIL_KEYS`,
+`_STATUS_KEYS`) can be adjusted in a minute — that's the only place the
+payload shape is assumed. If it's already running when it breaks, the health
+warning above tells you rather than leaving you to wonder.
 
 ## Criteria
 
@@ -107,6 +110,16 @@ same thing in a 14-seat row and a 24-seat row. `0.5` keeps the middle half;
 drop to `0.3` if you're fussy. Alerts are ranked most-central first.
 
 ## Alert behaviour
+
+Alerts go out at ntfy priority `high` by default, which is loud but does
+**not** pierce Do Not Disturb. Set `priority = "max"` under `[alerts]` if you
+want an early-morning cancellation to actually wake you.
+
+Silence is meant to mean "no seats", so it must not also mean "the endpoint
+changed and nothing works". After `health_warn_after` consecutive failed
+polls (default 3) you get a one-off *"seatwatch is broken, not quiet"* push,
+then quiet for 24h so it can't nag. A good poll resets the streak.
+
 
 Alerts fire on the *transition* from taken to free, not on every poll, so a
 seat that's been free all afternoon won't page you. State lives on the
@@ -131,9 +144,10 @@ never accumulates history). A seat that flickers is suppressed for
 python -m unittest discover -s seatwatch/tests -t . -v
 ```
 
-42 tests: row ordering, centre-offset maths, payload-shape tolerance,
-URL-shape extraction, alert de-duplication and cooldown, plus an end-to-end
-run of the real CLI against a fake Cineplex and a fake ntfy.
+51 tests: row ordering, centre-offset maths, payload-shape tolerance,
+URL-shape extraction, alert de-duplication and cooldown, health-warning
+thresholds, plus an end-to-end run of the real CLI against a fake Cineplex
+and a fake ntfy.
 
 ## Turning it off
 

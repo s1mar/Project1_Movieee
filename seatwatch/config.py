@@ -30,6 +30,7 @@ class Config:
     theatre_name: str = ""
     booking_url: str = ""
     film_id: str = ""
+    priority: str = "high"
     criteria: Criteria = field(default_factory=Criteria)
     showtimes: list[Showtime] = field(default_factory=list)
     interval_seconds: int = 45
@@ -37,6 +38,7 @@ class Config:
     cooldown_seconds: int = 6 * 3600
     alert_on_first_run: bool = True
     state_path: str = "state.json"
+    health_warn_after: int = 3
     base_url: str = "https://apis.cineplex.com"
     availability_path: str = ""
     layout_path: str = ""
@@ -54,6 +56,7 @@ def load(path: str | pathlib.Path | None = None) -> Config:
     crit = raw.get("criteria", {})
     poll = raw.get("poll", {})
     api = raw.get("api", {})
+    alerts = raw.get("alerts", {})
 
     cfg = Config(
         theatre_id=str(theatre.get("id", "")),
@@ -61,6 +64,7 @@ def load(path: str | pathlib.Path | None = None) -> Config:
         theatre_name=theatre.get("name", ""),
         booking_url=theatre.get("booking_url", ""),
         film_id=str(theatre.get("film_id", "")),
+        priority=str(alerts.get("priority", "high")),
         criteria=Criteria(
             min_row=str(crit.get("min_row", "E")),
             max_row=str(crit["max_row"]) if crit.get("max_row") else None,
@@ -78,6 +82,7 @@ def load(path: str | pathlib.Path | None = None) -> Config:
         cooldown_seconds=int(poll.get("cooldown_seconds", 6 * 3600)),
         alert_on_first_run=bool(poll.get("alert_on_first_run", True)),
         state_path=poll.get("state_path", "state.json"),
+        health_warn_after=int(poll.get("health_warn_after", 3)),
         base_url=api.get("base_url", "https://apis.cineplex.com"),
         availability_path=api.get("availability_path", ""),
         layout_path=api.get("layout_path", ""),

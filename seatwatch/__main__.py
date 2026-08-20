@@ -44,7 +44,12 @@ def _describe(matches: list[Match], limit: int = 8) -> str:
 
 
 def poll_once(cfg, client, showtime, verbose=True):
-    """Fetch and match one showtime. Returns (matches, total_available)."""
+    """Fetch and match one showtime.
+
+    Returns (matches, free_count, healthy). `healthy` is False when the
+    parser saw no seats at all, which means the payload shape changed -
+    not that the show is empty.
+    """
     avail_path, layout_path = _paths(cfg)
     theatre = showtime.theatre_id or cfg.theatre_id
     payload = client.seat_map(theatre, showtime.id, avail_path, layout_path)
@@ -54,12 +59,13 @@ def poll_once(cfg, client, showtime, verbose=True):
               f"run `dump` to inspect the payload")
     matches = match_seats(seats, cfg.criteria)
     free = sum(1 for s in seats if s.available)
+    healthy = bool(seats)
     if verbose:
         name = showtime.label or showtime.id
         print(f"  {name}: {len(seats)} seats, {free} free, "
               f"{len(matches)} matching"
               + (f" -> {_describe(matches)}" if matches else ""))
-    return matches, free
+    return matches, free, healthy
 
 
 def cmd_check(args, cfg):
@@ -70,7 +76,7 @@ def cmd_check(args, cfg):
     found = 0
     for showtime in cfg.showtimes:
         try:
-            matches, _ = poll_once(cfg, client, showtime)
+            matches, _, _ = poll_once(cfg, client, showtime)
             found += len(matches)
         except NotFound:
             print(f"  {showtime.label or showtime.id}: gone (delisted or past)")
@@ -99,12 +105,28 @@ def cmd_watch(args, cfg):
         for showtime in cfg.showtimes:
             key = showtime.key(cfg.theatre_id)
             try:
-                matches, _ = poll_once(cfg, client, showtime)
+                matches, _, healthy = poll_once(cfg, client, showtime)
+                problem = "" if healthy else "the parser saw zero seats"
             except NotFound:
                 print(f"  {showtime.label or showtime.id}: gone; skipping")
+                state.note_health(key, True)
                 continue
             except CineplexError as exc:
+                matches, healthy, problem = [], False, str(exc)
                 print(f"  {showtime.label or showtime.id}: ERROR {exc}")
+
+            if state.note_health(key, healthy, cfg.health_warn_after):
+                warn = Alert(
+                    title="seatwatch is broken, not quiet",
+                    body=(f"{cfg.health_warn_after} polls in a row failed for "
+                          f"{showtime.label or showtime.id}.\n\n{problem}\n\n"
+                          f"Silence from here means nothing until this is "
+                          f"fixed. Run: python -m seatwatch dump"),
+                    url=showtime.url or cfg.booking_url, priority="default")
+                if dispatch(warn):
+                    print("  >> health warning sent")
+            if not healthy:
+                state.record(key, [], [])
                 continue
 
             labels = [m.label for m in matches]
@@ -154,7 +176,7 @@ def _build_alert(cfg, showtime, matches, first_run):
         "Cancellations go fast - book now.",
     ]
     return Alert(title=title, body="\n".join(lines),
-                 url=showtime.url or cfg.booking_url)
+                 url=showtime.url or cfg.booking_url, priority=cfg.priority)
 
 
 def cmd_dump(args, cfg):
