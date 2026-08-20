@@ -12,28 +12,60 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 
 from seatwatch.__main__ import main
 
-# Row E spans 1..15 -> centre is 8. E8 is dead centre, E1/E15 are edges.
-SOLD_OUT = {"seats": [
-    {"rowName": "D", "seatNumber": "8", "isAvailable": True},
-    {"rowName": "E", "seatNumber": "1", "isAvailable": True},
-    {"rowName": "E", "seatNumber": "8", "isAvailable": False},
-    {"rowName": "E", "seatNumber": "15", "isAvailable": True},
-]}
-CANCELLATION = json.loads(json.dumps(SOLD_OUT))
-CANCELLATION["seats"][2]["isAvailable"] = True
+# A miniature auditorium in Cineplex's real two-endpoint shape: the layout
+# carries row letters and grid columns, availability is a flat id->status map
+# whose ids encode *physical* rows that run backwards from the letters.
+def _row(label, number, physical, cols):
+    return {
+        "number": number, "physicalNumber": physical, "label": label,
+        "seats": [{"id": f"1_{physical}_{c}", "column": c,
+                   "columnPhysicalNumber": c, "label": f"{label}{c}",
+                   "seatGroupIds": [], "type": "Standard"} for c in cols],
+    }
 
-STATE = {"payload": SOLD_OUT, "pushes": []}
+
+LAYOUT = {
+    "totalRows": 3, "totalColumns": 15,
+    "seatLegendTypes": ["Standard", "Wheelchair", "Companion"],
+    "standardSeats": {
+        "left": 0.0, "top": 0.0, "areaWidth": 15, "columnCount": 15,
+        "columnWidth": 1, "rowCount": 3,
+        "rows": [
+            _row("D", 0, 4, [8]),
+            _row("E", 1, 3, [1, 8, 15]),
+            {"number": 2, "physicalNumber": 2, "label": None, "seats": []},
+        ],
+    },
+}
+
+# Row E spans columns 1..15, so its centre is 8: E8 is dead centre and
+# E1/E15 are the edge seats that max_centre_offset should reject.
+_SOLD = {
+    "1_4_8": "Available",                     # row D - before min_row
+    "1_3_1": "Available", "1_3_8": "Occupied", "1_3_15": "Available",
+}
+SOLD_OUT = {"seatAvailabilities": dict(_SOLD),
+            "isSoldOut": False, "isPostShowtime": False}
+CANCELLATION = {"seatAvailabilities": dict(_SOLD, **{"1_3_8": "Available"}),
+                "isSoldOut": False, "isPostShowtime": False}
+
+STATE = {"payload": SOLD_OUT, "layout": LAYOUT, "pushes": []}
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
+    def _json(self, obj):
+        body = json.dumps(obj).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_GET(self):
         if "seat-availability" in self.path:
-            body = json.dumps(STATE["payload"]).encode()
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
+            self._json(STATE["payload"])
+        elif "seat-layout" in self.path:
+            self._json(STATE["layout"])
         else:
             self.send_error(404)
 
@@ -68,6 +100,7 @@ class IntegrationTests(unittest.TestCase):
 
     def setUp(self):
         STATE["payload"] = SOLD_OUT
+        STATE["layout"] = LAYOUT
         STATE["pushes"] = []
         self.tmp = tempfile.TemporaryDirectory()
         base = f"http://127.0.0.1:{self.port}"
@@ -161,6 +194,7 @@ url = "https://example.invalid/seats"
 
     def test_missing_showtime_is_reported_not_crashed(self):
         STATE["payload"] = {}
+        STATE["layout"] = {}
         self.assertEqual(self.run_cli("watch"), 0)
         self.assertEqual(STATE["pushes"], [])
 
@@ -173,6 +207,7 @@ url = "https://example.invalid/seats"
     def test_a_broken_endpoint_warns_instead_of_going_quiet(self):
         # An unparseable payload must not read as "no seats available".
         STATE["payload"] = {"unexpected": "shape"}
+        STATE["layout"] = {"unexpected": "shape"}
         for _ in range(3):
             self.run_cli("watch")
         self.assertEqual(len(STATE["pushes"]), 1)
@@ -180,15 +215,18 @@ url = "https://example.invalid/seats"
 
     def test_health_warning_does_not_repeat(self):
         STATE["payload"] = {"unexpected": "shape"}
+        STATE["layout"] = {"unexpected": "shape"}
         for _ in range(6):
             self.run_cli("watch")
         self.assertEqual(len(STATE["pushes"]), 1)
 
     def test_recovery_still_alerts_normally(self):
         STATE["payload"] = {"unexpected": "shape"}
+        STATE["layout"] = {"unexpected": "shape"}
         for _ in range(3):
             self.run_cli("watch")
         STATE["payload"] = CANCELLATION
+        STATE["layout"] = LAYOUT
         self.run_cli("watch")
         titles = [p["title"] for p in STATE["pushes"]]
         self.assertEqual(len(titles), 2)

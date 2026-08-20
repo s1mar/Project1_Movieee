@@ -81,18 +81,38 @@ NTFY_TOPIC=your-topic python -m seatwatch test-alert
 Then **merge this branch to `master`**. GitHub only runs `schedule:`
 workflows from the default branch — on a feature branch nothing fires.
 
-## First run
+## How the seat data actually works
 
-The parser has full unit and integration coverage against fixtures and a
-local fake API, but it has **never been run against the live Cineplex
-endpoint** — that couldn't be verified from the environment this was built
-in — a headless browser can't reach the network there, and the API can't be
-probed directly. So the first thing to run is `dump`. If it prints seats,
-you're done. If it prints `parsed 0 seats`, paste the JSON it dumped and the
-field names in `seats.py` (`_ROW_KEYS`, `_COL_KEYS`, `_AVAIL_KEYS`,
-`_STATUS_KEYS`) can be adjusted in a minute — that's the only place the
-payload shape is assumed. If it's already running when it breaks, the health
-warning above tells you rather than leaving you to wonder.
+Verified against the live API (theatre 9406, showtime 403870). **No API key
+is needed** for either endpoint.
+
+Seat state comes from two endpoints that are useless apart:
+
+| Endpoint | Gives |
+|---|---|
+| `.../seat-availability` | flat `{seat_id: "Available"\|"Occupied"}`, plus `isSoldOut` / `isPostShowtime` |
+| `.../seat-layout` | row **labels**, seat labels, seat types, grid columns |
+
+They join on seat id. The catch that makes the join mandatory: an id like
+`1_8_14` encodes a **physical** row number, and physical numbers run
+*backwards* relative to the row letters — row A is physical 12, row K is
+physical 1. Reading the id alone and calling row 5 "E" would silently watch
+the wrong end of the cinema.
+
+The layout also contains an unlabelled row with zero seats — that's the
+aisle, and it's why physical row 7 never appears in availability. Rows
+without a label are skipped.
+
+Layout is fetched once per showtime and cached, since only availability
+changes between polls.
+
+Seat types come through explicitly as `Standard` / `Wheelchair` /
+`Companion`, so `include_accessible = false` filters on the real type rather
+than guessing from names.
+
+If Cineplex changes the shape, `dump` prints both payloads next to what the
+parser made of them, and the health warning below means you find out rather
+than assuming the show is just full.
 
 ## Criteria
 
@@ -144,10 +164,11 @@ never accumulates history). A seat that flickers is suppressed for
 python -m unittest discover -s seatwatch/tests -t . -v
 ```
 
-51 tests: row ordering, centre-offset maths, payload-shape tolerance,
+67 tests: row ordering, centre-offset maths, payload-shape tolerance,
 URL-shape extraction, alert de-duplication and cooldown, health-warning
-thresholds, plus an end-to-end run of the real CLI against a fake Cineplex
-and a fake ntfy.
+thresholds, an end-to-end run of the real CLI against a fake Cineplex and a
+fake ntfy, and regression tests over payloads captured from the live API
+(including the inverted row numbering and the aisle row).
 
 ## Turning it off
 

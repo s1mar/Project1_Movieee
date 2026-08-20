@@ -37,14 +37,26 @@ class Seat:
     col: str
     available: bool
     seat_type: str = ""
+    # Physical grid position. Cineplex gives this directly; when a payload
+    # doesn't, we fall back to digits in the seat label.
+    column: int | None = None
+    seat_label: str = ""
     raw: dict = field(default_factory=dict, repr=False, compare=False)
 
     @property
     def label(self) -> str:
-        return f"{self.row}{self.col}"
+        return self.seat_label or f"{self.row}{self.col}"
+
+    @property
+    def position(self) -> int:
+        return self.column if self.column is not None else col_number(self.col)
 
     @property
     def is_accessible(self) -> bool:
+        if self.seat_type:
+            # Cineplex types these explicitly: Standard / Wheelchair / Companion.
+            if self.seat_type.strip().lower() in ("wheelchair", "companion"):
+                return True
         blob = f"{self.seat_type} {self.raw.get('seatTypeName', '')}".lower()
         return any(w in blob for w in _ACCESSIBLE_WORDS)
 
@@ -92,7 +104,7 @@ def extract_seats(payload: Any) -> list[Seat]:
         # First mention wins; records with no availability verdict were
         # already dropped by _walk, so every survivor here is equally good.
         seen.setdefault((seat.row, seat.col), seat)
-    return sorted(seen.values(), key=lambda s: (row_ordinal(s.row), col_number(s.col)))
+    return sorted(seen.values(), key=lambda s: (row_ordinal(s.row), s.position))
 
 
 def _walk(node: Any, inherited_row: str | None, out: list[Seat]) -> None:
@@ -173,7 +185,7 @@ class Match:
 
 def row_extent(seats: list[Seat], row: str) -> tuple[int, int]:
     """Leftmost and rightmost column number physically present in a row."""
-    cols = [col_number(s.col) for s in seats if s.row == row]
+    cols = [s.position for s in seats if s.row == row]
     cols = [c for c in cols if c]
     return (min(cols), max(cols)) if cols else (0, 0)
 
@@ -185,7 +197,7 @@ def centre_offset(seats: list[Seat], seat: Seat) -> float:
         return 0.0
     centre = (lo + hi) / 2
     half_width = (hi - lo) / 2
-    return abs(col_number(seat.col) - centre) / half_width
+    return abs(seat.position - centre) / half_width
 
 
 def match_seats(seats: list[Seat], criteria: Criteria) -> list[Match]:
@@ -212,7 +224,7 @@ def match_seats(seats: list[Seat], criteria: Criteria) -> list[Match]:
         matches = _require_adjacent(matches, criteria.min_adjacent)
 
     matches.sort(key=lambda m: (-m.score, row_ordinal(m.seat.row),
-                                col_number(m.seat.col)))
+                                m.seat.position))
     return matches
 
 
@@ -224,10 +236,10 @@ def _require_adjacent(matches: list[Match], n: int) -> list[Match]:
 
     kept: list[Match] = []
     for row_matches in by_row.values():
-        row_matches.sort(key=lambda m: col_number(m.seat.col))
+        row_matches.sort(key=lambda m: m.seat.position)
         run: list[Match] = []
         for m in row_matches:
-            if run and col_number(m.seat.col) != col_number(run[-1].seat.col) + 1:
+            if run and m.seat.position != run[-1].seat.position + 1:
                 if len(run) >= n:
                     kept.extend(run)
                 run = []
@@ -235,3 +247,46 @@ def _require_adjacent(matches: list[Match], n: int) -> list[Match]:
         if len(run) >= n:
             kept.extend(run)
     return kept
+
+
+# Areas Cineplex splits an auditorium into. Order doesn't matter; rows carry
+# their own labels.
+_SEAT_AREAS = ("standardSeats", "dboxSeats", "balconySeats", "premiumSeats")
+
+
+def parse_seatmap(layout: dict, availability: dict) -> list[Seat]:
+    """Join a seat-layout with a seat-availability payload.
+
+    Cineplex splits these across two endpoints: the layout carries row
+    labels, seat labels, types and grid positions, while availability is a
+    flat {seat_id: "Available"|"Occupied"} map. Neither is usable alone -
+    availability keys are ids like "1_8_14" whose row component is a
+    *physical* row number that runs backwards relative to the row letters.
+    Joining on id is what makes "row E" mean row E.
+    """
+    statuses = availability.get("seatAvailabilities", availability) or {}
+    seats: list[Seat] = []
+
+    for area_name in _SEAT_AREAS:
+        area = layout.get(area_name)
+        if not isinstance(area, dict):
+            continue
+        for row in area.get("rows", []):
+            label = row.get("label")
+            if not label:
+                continue  # An unlabelled row is an aisle, not seating.
+            for seat in row.get("seats", []):
+                seat_id = seat.get("id")
+                if seat_id is None or seat_id not in statuses:
+                    continue
+                seats.append(Seat(
+                    row=str(label).strip().upper(),
+                    col=str(seat.get("columnPhysicalNumber", "")),
+                    available=str(statuses[seat_id]).strip().lower() == "available",
+                    seat_type=str(seat.get("type", "")),
+                    column=seat.get("column"),
+                    seat_label=str(seat.get("label", "")),
+                    raw=seat,
+                ))
+
+    return sorted(seats, key=lambda s: (row_ordinal(s.row), s.position))

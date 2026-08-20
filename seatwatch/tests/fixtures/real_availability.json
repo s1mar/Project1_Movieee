@@ -1,0 +1,30 @@
+{
+ "seatAvailabilities": {
+  "1_6_28": "Occupied",
+  "1_6_29": "Occupied",
+  "1_6_30": "Occupied",
+  "1_6_31": "Occupied",
+  "1_6_32": "Occupied",
+  "1_6_33": "Occupied",
+  "1_6_34": "Occupied",
+  "1_6_35": "Occupied",
+  "1_8_24": "Occupied",
+  "1_8_25": "Occupied",
+  "1_8_26": "Occupied",
+  "1_8_27": "Occupied",
+  "1_8_28": "Occupied",
+  "1_8_29": "Occupied",
+  "1_8_30": "Available",
+  "1_8_31": "Available",
+  "1_9_27": "Occupied",
+  "1_9_28": "Occupied",
+  "1_9_29": "Occupied",
+  "1_9_30": "Occupied",
+  "1_9_31": "Occupied",
+  "1_9_32": "Occupied",
+  "1_9_33": "Occupied",
+  "1_9_34": "Occupied"
+ },
+ "isSoldOut": false,
+ "isPostShowtime": false
+}

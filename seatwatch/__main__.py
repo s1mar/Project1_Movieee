@@ -18,9 +18,9 @@ import time
 
 from . import config as config_mod
 from .cineplex import (SEAT_AVAILABILITY, SEAT_LAYOUT, CineplexError, Client,
-                       NotFound)
+                       NotFound, PostShowtime)
 from .notify import Alert, dispatch
-from .seats import Match, extract_seats, match_seats
+from .seats import Match, extract_seats, match_seats, parse_seatmap
 from .urlparse_ids import extract as extract_ids
 from .state import State
 
@@ -52,8 +52,13 @@ def poll_once(cfg, client, showtime, verbose=True):
     """
     avail_path, layout_path = _paths(cfg)
     theatre = showtime.theatre_id or cfg.theatre_id
-    payload = client.seat_map(theatre, showtime.id, avail_path, layout_path)
-    seats = extract_seats(payload)
+    layout, availability = client.seat_map(theatre, showtime.id,
+                                           avail_path, layout_path)
+    seats = parse_seatmap(layout, availability)
+    if not seats:
+        # Unrecognised shape - fall back to the generic walker rather than
+        # reporting a sold-out house.
+        seats = extract_seats(availability) or extract_seats(layout)
     if not seats and verbose:
         print(f"  ! parsed 0 seats for {showtime.id}; "
               f"run `dump` to inspect the payload")
@@ -78,7 +83,7 @@ def cmd_check(args, cfg):
         try:
             matches, _, _ = poll_once(cfg, client, showtime)
             found += len(matches)
-        except NotFound:
+        except (NotFound, PostShowtime):
             print(f"  {showtime.label or showtime.id}: gone (delisted or past)")
         except CineplexError as exc:
             print(f"  {showtime.label or showtime.id}: ERROR {exc}")
@@ -107,7 +112,7 @@ def cmd_watch(args, cfg):
             try:
                 matches, _, healthy = poll_once(cfg, client, showtime)
                 problem = "" if healthy else "the parser saw zero seats"
-            except NotFound:
+            except (NotFound, PostShowtime):
                 print(f"  {showtime.label or showtime.id}: gone; skipping")
                 state.note_health(key, True)
                 continue
@@ -187,9 +192,13 @@ def cmd_dump(args, cfg):
     if not theatre or not showtime:
         print("Need --theatre and --showtime (or entries in config.toml).")
         return 2
-    payload = client.seat_map(theatre, showtime, avail_path, layout_path)
-    print(json.dumps(payload, indent=2)[:args.limit])
-    seats = extract_seats(payload)
+    layout, availability = client.seat_map(theatre, showtime,
+                                           avail_path, layout_path)
+    print("--- availability (truncated) ---")
+    print(json.dumps(availability, indent=2)[:args.limit // 2])
+    print("\n--- layout (truncated) ---")
+    print(json.dumps(layout, indent=2)[:args.limit // 2])
+    seats = parse_seatmap(layout, availability)
     print(f"\n--- parser saw {len(seats)} seats, "
           f"{sum(1 for s in seats if s.available)} available ---")
     for seat in seats[:20]:

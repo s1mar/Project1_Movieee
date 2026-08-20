@@ -1,0 +1,244 @@
+{
+ "totalRows": 12,
+ "totalColumns": 35,
+ "seatLegendTypes": [
+  "Standard",
+  "Wheelchair",
+  "Companion"
+ ],
+ "standardSeats": {
+  "left": 0.0,
+  "top": 0.0,
+  "areaWidth": 35,
+  "columnCount": 35,
+  "columnWidth": 1,
+  "rowCount": 12,
+  "rows": [
+   {
+    "number": 3,
+    "physicalNumber": 9,
+    "label": "D",
+    "seats": [
+     {
+      "id": "1_9_34",
+      "column": 1,
+      "columnPhysicalNumber": 34,
+      "label": "D33",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_9_33",
+      "column": 2,
+      "columnPhysicalNumber": 33,
+      "label": "D32",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_9_32",
+      "column": 3,
+      "columnPhysicalNumber": 32,
+      "label": "D31",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_9_31",
+      "column": 4,
+      "columnPhysicalNumber": 31,
+      "label": "D30",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_9_30",
+      "column": 5,
+      "columnPhysicalNumber": 30,
+      "label": "D29",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_9_29",
+      "column": 6,
+      "columnPhysicalNumber": 29,
+      "label": "D28",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_9_28",
+      "column": 7,
+      "columnPhysicalNumber": 28,
+      "label": "D27",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_9_27",
+      "column": 8,
+      "columnPhysicalNumber": 27,
+      "label": "D26",
+      "seatGroupIds": [],
+      "type": "Standard"
+     }
+    ]
+   },
+   {
+    "number": 4,
+    "physicalNumber": 8,
+    "label": "E",
+    "seats": [
+     {
+      "id": "1_8_31",
+      "column": 4,
+      "columnPhysicalNumber": 31,
+      "label": "EW4",
+      "seatGroupIds": [
+       "1_8_29",
+       "1_8_31"
+      ],
+      "type": "Wheelchair"
+     },
+     {
+      "id": "1_8_30",
+      "column": 5,
+      "columnPhysicalNumber": 30,
+      "label": "EW3",
+      "seatGroupIds": [],
+      "type": "Wheelchair"
+     },
+     {
+      "id": "1_8_29",
+      "column": 6,
+      "columnPhysicalNumber": 29,
+      "label": "EC24",
+      "seatGroupIds": [
+       "1_8_29",
+       "1_8_31"
+      ],
+      "type": "Companion"
+     },
+     {
+      "id": "1_8_28",
+      "column": 7,
+      "columnPhysicalNumber": 28,
+      "label": "E23",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_8_27",
+      "column": 8,
+      "columnPhysicalNumber": 27,
+      "label": "E22",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_8_26",
+      "column": 9,
+      "columnPhysicalNumber": 26,
+      "label": "E21",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_8_25",
+      "column": 10,
+      "columnPhysicalNumber": 25,
+      "label": "E20",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_8_24",
+      "column": 11,
+      "columnPhysicalNumber": 24,
+      "label": "E19",
+      "seatGroupIds": [],
+      "type": "Standard"
+     }
+    ]
+   },
+   {
+    "number": 5,
+    "physicalNumber": 7,
+    "label": null,
+    "seats": []
+   },
+   {
+    "number": 6,
+    "physicalNumber": 6,
+    "label": "F",
+    "seats": [
+     {
+      "id": "1_6_35",
+      "column": 0,
+      "columnPhysicalNumber": 35,
+      "label": "F35",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_6_34",
+      "column": 1,
+      "columnPhysicalNumber": 34,
+      "label": "F34",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_6_33",
+      "column": 2,
+      "columnPhysicalNumber": 33,
+      "label": "F33",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_6_32",
+      "column": 3,
+      "columnPhysicalNumber": 32,
+      "label": "F32",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_6_31",
+      "column": 4,
+      "columnPhysicalNumber": 31,
+      "label": "F31",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_6_30",
+      "column": 5,
+      "columnPhysicalNumber": 30,
+      "label": "F30",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_6_29",
+      "column": 6,
+      "columnPhysicalNumber": 29,
+      "label": "F29",
+      "seatGroupIds": [],
+      "type": "Standard"
+     },
+     {
+      "id": "1_6_28",
+      "column": 7,
+      "columnPhysicalNumber": 28,
+      "label": "F28",
+      "seatGroupIds": [],
+      "type": "Standard"
+     }
+    ]
+   }
+  ]
+ }
+}

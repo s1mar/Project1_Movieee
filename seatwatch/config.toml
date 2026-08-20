@@ -65,3 +65,8 @@ layout_path = ""
 # id = "123456"
 # label = "Fri 21 Aug, 7:00 PM"
 # url = "https://www.cineplex.com/..."   # tapping the push opens this
+
+[[showtimes]]
+id = "403870"
+label = "The Odyssey IMAX 70mm"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=403870&dbox=false"
