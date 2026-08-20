@@ -20,7 +20,9 @@ from dataclasses import dataclass, field
 DEFAULT_BASE = "https://apis.cineplex.com"
 SEAT_AVAILABILITY = "/prod/ticketing/api/v1/theatre/{theatre_id}/showtime/{showtime_id}/seat-availability"
 SEAT_LAYOUT = "/prod/ticketing/api/v1/theatre/{theatre_id}/showtime/{showtime_id}/seat-layout"
-SHOWTIMES = "/prod/cpx/theatrical/api/v1/showtimes"
+# Taken from the route table in Cineplex's own ecommerce bundle, so this is
+# the path their site uses rather than a guess. Gated behind the API key.
+SHOWTIMES = "/prod/cpx/theatrical/api/v1/theatres/{location_id}/showtimes/{date}"
 
 # Identify the watcher honestly rather than impersonating a browser, and
 # leave a contact path in the string.
@@ -114,6 +116,6 @@ class Client:
 
     def showtimes(self, location_id: str, date: str,
                   path: str = SHOWTIMES, language: str = "en") -> dict:
-        """Showtimes for a theatre on a date. Needs an API key."""
-        return self.get(path, {"language": language,
-                               "locationId": location_id, "date": date})
+        """Showtimes for a theatre on a date (YYYY-MM-DD). Needs an API key."""
+        return self.get(path.format(location_id=location_id, date=date),
+                        {"language": language})

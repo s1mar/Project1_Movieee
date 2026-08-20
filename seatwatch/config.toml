@@ -72,6 +72,9 @@ layout_path = ""
 enabled = true
 days = 7
 
+# Discovery hits /prod/cpx/theatrical/api/v1/theatres/{id}/showtimes/{date},
+# the route Cineplex's own site uses. It answers 401 without a key.
+
 # One block per screening you want watched. Discovery adds to these, it does
 # not replace them.
 # [[showtimes]]
