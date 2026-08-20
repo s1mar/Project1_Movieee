@@ -1,0 +1,59 @@
+# seatwatch - The Odyssey, IMAX 70mm, Montreal
+#
+# The two IDs below are the only things you must fill in by hand. Cineplex
+# does not publish them, so grab them from your own browser once:
+#
+#   1. Open the showtime you want on cineplex.com and click through to the
+#      seat picker.
+#   2. Open DevTools -> Network, filter on "seat", and reload.
+#   3. You will see a request like
+#        .../api/v1/theatre/<THEATRE_ID>/showtime/<SHOWTIME_ID>/seat-availability
+#      Copy those two numbers in.
+#   4. Verify with:  python -m seatwatch dump
+#
+# Repeat step 1-3 for each showtime you want watched and add a [[showtimes]]
+# block per screening. Everything else has a working default.
+
+[theatre]
+# TODO: Cineplex Cinema Banque Scotia Montreal - Quebec's only IMAX 70mm screen.
+id = ""
+location_id = ""
+name = "Cineplex Cinema Banque Scotia Montreal"
+booking_url = "https://www.cineplex.com/movie/imax70-the-odyssey-the-imax-experience-in-7"
+
+[criteria]
+# Row E and further back. Rows A-D are too close for 70mm IMAX.
+min_row = "E"
+# Optional back limit, e.g. "L". Empty means no limit.
+max_row = ""
+# 0.0 = dead centre of the row, 1.0 = the outermost seat.
+# 0.5 keeps the middle half; drop to 0.3 to be fussier about "the middle".
+max_centre_offset = 0.5
+# Wheelchair and companion seats are left for people who need them.
+include_accessible = false
+# Raise to 2 to only hear about pairs of seats side by side.
+min_adjacent = 1
+
+[poll]
+# One workflow run polls every 45s for ~4.5 minutes, so a 5-minute cron
+# gives near-continuous coverage instead of a single snapshot every 5 min.
+interval_seconds = 45
+duration_seconds = 270
+# Do not re-alert about the same seat for 6 hours.
+cooldown_seconds = 21600
+# Tell me about seats that are already free the very first time this runs.
+alert_on_first_run = true
+state_path = "state/state.json"
+
+[api]
+base_url = "https://apis.cineplex.com"
+# Override only if Cineplex moves these paths. {theatre_id} and {showtime_id}
+# are substituted in.
+availability_path = ""
+layout_path = ""
+
+# One block per screening you want watched.
+# [[showtimes]]
+# id = "123456"
+# label = "Fri 21 Aug, 7:00 PM"
+# url = "https://www.cineplex.com/..."   # tapping the push opens this

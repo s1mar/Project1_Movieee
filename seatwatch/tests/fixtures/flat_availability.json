@@ -1,0 +1,13 @@
+{
+  "seats": [
+    {"rowName": "D", "seatNumber": "8", "isAvailable": true},
+    {"rowName": "E", "seatNumber": "8", "isAvailable": true},
+    {"rowName": "E", "seatNumber": "1", "isAvailable": true},
+    {"rowName": "E", "seatNumber": "15", "isAvailable": true},
+    {"rowName": "G", "seatNumber": "7", "isAvailable": false},
+    {"rowName": "G", "seatNumber": "8", "isAvailable": true},
+    {"rowName": "G", "seatNumber": "9", "isAvailable": true},
+    {"rowName": "G", "seatNumber": "1", "isAvailable": true},
+    {"rowName": "G", "seatNumber": "15", "isAvailable": true}
+  ]
+}

@@ -1,0 +1,82 @@
+name: seatwatch
+
+# Scheduled workflows only fire from the repository's DEFAULT branch, so this
+# file has to reach `master` before any polling happens.
+on:
+  schedule:
+    # Every 5 minutes is the fastest GitHub allows. Actual firing is
+    # best-effort and often runs late under load, which is why a single run
+    # polls repeatedly instead of taking one snapshot.
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'What to run'
+        type: choice
+        default: watch
+        options: [watch, check, test-alert]
+
+concurrency:
+  group: seatwatch
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # push the state branch
+  issues: write     # optional GitHub-issue alert channel
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Stop early if no showtimes are configured
+        id: gate
+        run: |
+          if grep -qE '^\s*id\s*=\s*"[0-9]+"' seatwatch/config.toml; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::seatwatch/config.toml has no showtime IDs yet - skipping. See seatwatch/README.md."
+          fi
+
+      - name: Restore previous state
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          mkdir -p state
+          git fetch --depth=1 origin seatwatch-state 2>/dev/null || true
+          git show FETCH_HEAD:state.json > state/state.json 2>/dev/null \
+            || echo '{}' > state/state.json
+          echo "state is $(wc -c < state/state.json) bytes"
+
+      - name: Poll for seats
+        if: steps.gate.outputs.ready == 'true'
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_SERVER: ${{ secrets.NTFY_SERVER }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          CINEPLEX_API_KEY: ${{ secrets.CINEPLEX_API_KEY }}
+          ALERT_ISSUE_NUMBER: ${{ vars.ALERT_ISSUE_NUMBER }}
+          # Only wire up the issue channel when an issue is nominated,
+          # otherwise every alert would open a brand new issue.
+          GITHUB_TOKEN: ${{ vars.ALERT_ISSUE_NUMBER && secrets.GITHUB_TOKEN || '' }}
+        run: python -m seatwatch ${{ inputs.mode || 'watch' }}
+
+      - name: Persist state
+        # Runs even if polling failed, so a partial pass is not re-alerted.
+        if: always() && steps.gate.outputs.ready == 'true' && inputs.mode != 'test-alert'
+        run: |
+          [ -s state/state.json ] || exit 0
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Write a fresh parentless commit so the state branch never grows
+          # a 288-commits-a-day history.
+          blob=$(git hash-object -w state/state.json)
+          tree=$(printf '100644 blob %s\tstate.json\n' "$blob" | git mktree)
+          commit=$(git commit-tree "$tree" -m "seatwatch state $(date -u +%FT%TZ)")
+          git push -f origin "$commit:refs/heads/seatwatch-state"

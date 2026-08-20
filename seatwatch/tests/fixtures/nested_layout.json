@@ -1,0 +1,24 @@
+{
+  "theatreId": 7031,
+  "showtimeId": 123456,
+  "seatLayout": {
+    "rows": [
+      {"rowName": "A", "seats": [
+        {"columnName": "1", "status": "Available", "seatType": "Standard"},
+        {"columnName": "2", "status": "Sold", "seatType": "Standard"}
+      ]},
+      {"rowName": "E", "seats": [
+        {"columnName": "1", "status": "Available", "seatType": "Standard"},
+        {"columnName": "5", "status": "Sold", "seatType": "Standard"},
+        {"columnName": "6", "status": "Available", "seatType": "Standard"},
+        {"columnName": "7", "status": "Available", "seatType": "Standard"},
+        {"columnName": "11", "status": "Available", "seatType": "Wheelchair"}
+      ]},
+      {"rowName": "F", "seats": [
+        {"columnName": "1", "status": "Sold", "seatType": "Standard"},
+        {"columnName": "6", "status": "Available", "seatType": "Standard"},
+        {"columnName": "11", "status": "Sold", "seatType": "Standard"}
+      ]}
+    ]
+  }
+}

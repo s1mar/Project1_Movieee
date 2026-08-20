@@ -1,0 +1,133 @@
+# seatwatch
+
+Polls a Cineplex showtime's seat map on a GitHub Actions cron and pushes to
+your phone when a seat you'd actually want frees up. Built for *The Odyssey*
+in IMAX 70mm at Cinéma Banque Scotia Montréal, but the criteria are config.
+
+Standard library only — no `pip install` step, so each run is a few seconds
+of compute. This repo is public, so Actions minutes are free.
+
+## Read this before you set it up
+
+Three things you should know, because they affect whether this works for you:
+
+1. **Cineplex's `robots.txt` disallows all non-search-engine automated
+   access to the whole site** (`User-agent: * / Disallow: /`), and their
+   terms discourage automated collection. This tool polls a JSON endpoint
+   rather than crawling pages, identifies itself honestly in its
+   `User-Agent`, and defaults to one request per showtime per 45 seconds —
+   but it is still automated access to a site that asks you not to. That's
+   your call to make, not mine. Keep the interval slow and the showtime list
+   short.
+2. **The seat endpoint is undocumented.** It was identified from public
+   community projects, not Cineplex documentation. It can change or start
+   requiring a key without notice. The parser is deliberately loose so
+   cosmetic changes don't break it, and `dump` exists to show you what's
+   actually coming back. This part is **not verified against the live API** —
+   see "First run" below.
+3. **`schedule:` cron is best-effort.** GitHub queues scheduled jobs and
+   frequently runs them late — 10 to 30 minutes late is normal at peak, and
+   runs can be dropped entirely. That's why one run polls repeatedly for
+   ~4.5 minutes instead of taking a single snapshot. Treat the alert as
+   "a seat opened recently", not "a seat opened 5 seconds ago".
+
+## Setup
+
+### 1. Get the two IDs
+
+Cineplex doesn't publish them. From your own browser, once:
+
+1. Open the showtime on cineplex.com and click through to the seat picker.
+2. DevTools → Network, filter `seat`, reload.
+3. Find a request like
+   `…/api/v1/theatre/<THEATRE_ID>/showtime/<SHOWTIME_ID>/seat-availability`.
+4. Put those into `seatwatch/config.toml`, one `[[showtimes]]` block per
+   screening you want watched.
+
+### 2. Set up push
+
+Install [ntfy](https://ntfy.sh) on your phone and subscribe to a topic name
+only you know — topic names are the only access control, so use something
+random like `odyssey-mtl-7f3a9c21`, not `odyssey`.
+
+Then add it as a repo secret (**Settings → Secrets and variables → Actions**):
+
+| Secret | Required | What |
+|---|---|---|
+| `NTFY_TOPIC` | yes | Your topic name. Never put this in `config.toml` — this repo is public. |
+| `NTFY_SERVER` | no | Self-hosted ntfy. Defaults to `https://ntfy.sh`. |
+| `WEBHOOK_URL` | no | Discord/Slack incoming webhook, if you want a second channel. |
+| `CINEPLEX_API_KEY` | no | Only if the endpoint starts returning 401/403, or for `discover`. |
+
+Set repo **variable** `ALERT_ISSUE_NUMBER` to also comment on an issue.
+
+### 3. Verify, then merge to master
+
+```bash
+python -m seatwatch dump        # does the parser see real seats?
+python -m seatwatch check       # what matches right now?
+NTFY_TOPIC=your-topic python -m seatwatch test-alert
+```
+
+Then **merge this branch to `master`**. GitHub only runs `schedule:`
+workflows from the default branch — on a feature branch nothing fires.
+
+## First run
+
+The parser has full unit and integration coverage against fixtures and a
+local fake API, but it has **never been run against the live Cineplex
+endpoint** — that couldn't be verified from the environment this was built
+in. So the first thing to run is `dump`. If it prints seats, you're done. If
+it prints `parsed 0 seats`, paste the JSON it dumped and the field names in
+`seats.py` (`_ROW_KEYS`, `_COL_KEYS`, `_AVAIL_KEYS`, `_STATUS_KEYS`) can be
+adjusted in a minute — that's the only place the payload shape is assumed.
+
+## Criteria
+
+```toml
+[criteria]
+min_row = "E"              # E and further back; A-D are too close for 70mm
+max_row = ""               # optional back limit, e.g. "L"
+max_centre_offset = 0.5    # 0.0 = dead centre, 1.0 = the aisle seat
+include_accessible = false # leave wheelchair/companion seats alone
+min_adjacent = 1           # 2 = only tell me about pairs
+```
+
+`max_centre_offset` is a fraction of the row's half-width, so it means the
+same thing in a 14-seat row and a 24-seat row. `0.5` keeps the middle half;
+drop to `0.3` if you're fussy. Alerts are ranked most-central first.
+
+## Alert behaviour
+
+Alerts fire on the *transition* from taken to free, not on every poll, so a
+seat that's been free all afternoon won't page you. State lives on the
+orphan `seatwatch-state` branch (one parentless commit, force-pushed, so it
+never accumulates history). A seat that flickers is suppressed for
+`cooldown_seconds` (default 6h).
+
+## Commands
+
+| Command | Does |
+|---|---|
+| `python -m seatwatch check` | One pass, prints matches, sends nothing |
+| `python -m seatwatch watch` | Polls for `duration_seconds`, alerts on new seats |
+| `python -m seatwatch dump` | Raw seat JSON + what the parser made of it |
+| `python -m seatwatch discover --date YYYY-MM-DD` | List showtimes (needs API key) |
+| `python -m seatwatch test-alert` | Prove the push path works |
+
+## Tests
+
+```bash
+python -m unittest discover -s seatwatch/tests -t . -v
+```
+
+34 tests: row ordering, centre-offset maths, payload-shape tolerance,
+alert de-duplication and cooldown, plus an end-to-end run of the real CLI
+against a fake Cineplex and a fake ntfy.
+
+## Turning it off
+
+Disable the **seatwatch** workflow under the repo's Actions tab, or delete
+the `[[showtimes]]` blocks — with no showtime IDs configured the job exits
+immediately. Note that GitHub disables scheduled workflows automatically
+after 60 days without repo activity.
