@@ -38,7 +38,9 @@ jobs:
       - name: Stop early if no showtimes are configured
         id: gate
         run: |
-          if grep -qE '^\s*id\s*=\s*"[0-9]+"' seatwatch/config.toml; then
+          # Gate on a real [[showtimes]] block - the theatre id is filled
+          # in already, so matching on `id =` would always be true.
+          if grep -qE '^\[\[showtimes\]\]' seatwatch/config.toml; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"

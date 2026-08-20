@@ -33,16 +33,25 @@ Three things you should know, because they affect whether this works for you:
 
 ## Setup
 
-### 1. Get the two IDs
+### 1. Add the showtimes
 
-Cineplex doesn't publish them. From your own browser, once:
+The theatre is already configured — `theatreId 9406`, Cinéma Banque Scotia
+Montréal, read from `props.pageProps.theatreDetails` in that theatre page's
+`__NEXT_DATA__`. The film is `38376`.
 
-1. Open the showtime on cineplex.com and click through to the seat picker.
-2. DevTools → Network, filter `seat`, reload.
-3. Find a request like
-   `…/api/v1/theatre/<THEATRE_ID>/showtime/<SHOWTIME_ID>/seat-availability`.
-4. Put those into `seatwatch/config.toml`, one `[[showtimes]]` block per
-   screening you want watched.
+Showtime IDs change per screening, so add one per showing you want watched.
+Open the showtime on cineplex.com, click through to the seat picker, copy the
+address bar, and:
+
+```bash
+python -m seatwatch add-showtime \
+  --url "<paste>" --label "Fri 21 Aug, 7:00 PM"
+```
+
+That pulls the IDs out of the URL and appends the `[[showtimes]]` block. If
+the URL shape isn't one it recognises, it prints every number it found so you
+can pass the right one with `--showtime-id`. With an API key set,
+`discover --date YYYY-MM-DD` lists them instead.
 
 ### 2. Set up push
 
@@ -57,7 +66,7 @@ Then add it as a repo secret (**Settings → Secrets and variables → Actions**
 | `NTFY_TOPIC` | yes | Your topic name. Never put this in `config.toml` — this repo is public. |
 | `NTFY_SERVER` | no | Self-hosted ntfy. Defaults to `https://ntfy.sh`. |
 | `WEBHOOK_URL` | no | Discord/Slack incoming webhook, if you want a second channel. |
-| `CINEPLEX_API_KEY` | no | Only if the endpoint starts returning 401/403, or for `discover`. |
+| `CINEPLEX_API_KEY` | no | Only if the seat endpoint starts returning 401/403, or for `discover` — the showtimes feed is key-gated. |
 
 Set repo **variable** `ALERT_ISSUE_NUMBER` to also comment on an issue.
 
@@ -112,6 +121,7 @@ never accumulates history). A seat that flickers is suppressed for
 | `python -m seatwatch check` | One pass, prints matches, sends nothing |
 | `python -m seatwatch watch` | Polls for `duration_seconds`, alerts on new seats |
 | `python -m seatwatch dump` | Raw seat JSON + what the parser made of it |
+| `python -m seatwatch add-showtime --url …` | Turn a pasted URL into a config block |
 | `python -m seatwatch discover --date YYYY-MM-DD` | List showtimes (needs API key) |
 | `python -m seatwatch test-alert` | Prove the push path works |
 
@@ -121,13 +131,13 @@ never accumulates history). A seat that flickers is suppressed for
 python -m unittest discover -s seatwatch/tests -t . -v
 ```
 
-34 tests: row ordering, centre-offset maths, payload-shape tolerance,
-alert de-duplication and cooldown, plus an end-to-end run of the real CLI
-against a fake Cineplex and a fake ntfy.
+42 tests: row ordering, centre-offset maths, payload-shape tolerance,
+URL-shape extraction, alert de-duplication and cooldown, plus an end-to-end
+run of the real CLI against a fake Cineplex and a fake ntfy.
 
 ## Turning it off
 
 Disable the **seatwatch** workflow under the repo's Actions tab, or delete
-the `[[showtimes]]` blocks — with no showtime IDs configured the job exits
+the `[[showtimes]]` blocks — with no `[[showtimes]]` block the job no-ops
 immediately. Note that GitHub disables scheduled workflows automatically
 after 60 days without repo activity.

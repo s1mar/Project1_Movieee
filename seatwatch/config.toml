@@ -1,25 +1,24 @@
 # seatwatch - The Odyssey, IMAX 70mm, Montreal
 #
-# The two IDs below are the only things you must fill in by hand. Cineplex
-# does not publish them, so grab them from your own browser once:
+# The theatre and film IDs below are already filled in. The only thing left
+# is one [[showtimes]] block per screening you want watched. Fastest way:
 #
-#   1. Open the showtime you want on cineplex.com and click through to the
-#      seat picker.
-#   2. Open DevTools -> Network, filter on "seat", and reload.
-#   3. You will see a request like
-#        .../api/v1/theatre/<THEATRE_ID>/showtime/<SHOWTIME_ID>/seat-availability
-#      Copy those two numbers in.
-#   4. Verify with:  python -m seatwatch dump
+#   1. Open the showtime on cineplex.com, click through to the seat picker.
+#   2. Copy the address bar.
+#   3. python -m seatwatch add-showtime --url "<paste>" --label "Fri 7:00 PM"
+#   4. python -m seatwatch dump      # confirm real seats come back
 #
-# Repeat step 1-3 for each showtime you want watched and add a [[showtimes]]
-# block per screening. Everything else has a working default.
+# add-showtime pulls the IDs out of the URL and appends the block for you.
 
 [theatre]
-# TODO: Cineplex Cinema Banque Scotia Montreal - Quebec's only IMAX 70mm screen.
-id = ""
-location_id = ""
-name = "Cineplex Cinema Banque Scotia Montreal"
+# Cinema Banque Scotia Montreal - Quebec's only IMAX 70mm screen.
+# theatreId from the theatre page's __NEXT_DATA__ (props.pageProps.theatreDetails).
+id = "9406"
+location_id = "9406"
+name = "Cinema Banque Scotia Montreal"
 booking_url = "https://www.cineplex.com/movie/imax70-the-odyssey-the-imax-experience-in-7"
+# The Odyssey: The IMAX Experience in 70MM Film. Used by `discover` to filter.
+film_id = "38376"
 
 [criteria]
 # Row E and further back. Rows A-D are too close for 70mm IMAX.

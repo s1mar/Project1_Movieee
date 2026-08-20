@@ -4,6 +4,7 @@
     python -m seatwatch watch        poll for a while, alert on newly free seats
     python -m seatwatch dump         raw seat JSON, for fixing the parser
     python -m seatwatch discover     list showtimes for a date (needs API key)
+    python -m seatwatch add-showtime paste a seat-picker URL, get a config block
     python -m seatwatch test-alert   prove the notification path works
 """
 
@@ -11,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import pathlib
 import sys
 import time
 
@@ -19,6 +21,7 @@ from .cineplex import (SEAT_AVAILABILITY, SEAT_LAYOUT, CineplexError, Client,
                        NotFound)
 from .notify import Alert, dispatch
 from .seats import Match, extract_seats, match_seats
+from .urlparse_ids import extract as extract_ids
 from .state import State
 
 
@@ -179,7 +182,50 @@ def cmd_discover(args, cfg):
         print("discover needs CINEPLEX_API_KEY; the showtimes feed is gated.")
         return 2
     payload = client.showtimes(cfg.location_id or cfg.theatre_id, args.date)
+    film = args.film_id or cfg.film_id
+    if film:
+        # Keep only the branches mentioning this film, so the dump is the
+        # Odyssey's showtimes rather than the whole day's programme.
+        blob = json.dumps(payload)
+        if film not in blob:
+            print(f"No sign of film {film} at this theatre on {args.date}.")
+            return 0
     print(json.dumps(payload, indent=2)[:args.limit])
+    return 0
+
+
+def cmd_add_showtime(args, cfg):
+    """Turn a pasted seat-picker URL into a [[showtimes]] block."""
+    found = extract_ids(args.url)
+    if args.showtime_id:
+        found.showtime_id = args.showtime_id
+    theatre = found.theatre_id or cfg.theatre_id
+    if not found.showtime_id:
+        print("Could not find a showtime ID in that URL.")
+        if found.candidates:
+            print("Numbers I did find - if one is the showtime, pass it with "
+                  "--showtime-id:")
+            for key, value in found.candidates.items():
+                print(f"  {key} = {value}")
+        return 2
+    if found.theatre_id and cfg.theatre_id and found.theatre_id != cfg.theatre_id:
+        print(f"Note: URL theatre {found.theatre_id} differs from configured "
+              f"{cfg.theatre_id}; using the URL's.")
+
+    block = ["", "[[showtimes]]", f'id = "{found.showtime_id}"']
+    if args.label:
+        block.append(f'label = "{args.label}"')
+    block.append(f'url = "{args.url.strip()}"')
+    if found.theatre_id and found.theatre_id != cfg.theatre_id:
+        block.append(f'theatre_id = "{found.theatre_id}"')
+    text = "\n".join(block) + "\n"
+
+    path = pathlib.Path(args.config) if args.config else config_mod.DEFAULT_PATH
+    with path.open("a") as fh:
+        fh.write(text)
+    print(f"Appended to {path}:{text}")
+    print(f"Now run:  python -m seatwatch dump --theatre {theatre} "
+          f"--showtime {found.showtime_id}")
     return 0
 
 
@@ -211,15 +257,24 @@ def main(argv=None):
     d.add_argument("--showtime")
     d.add_argument("--limit", type=int, default=6000)
 
+    add = sub.add_parser("add-showtime")
+    add.add_argument("--url", required=True,
+                     help="seat-picker URL copied from the address bar")
+    add.add_argument("--label", default="", help='e.g. "Fri 21 Aug, 7:00 PM"')
+    add.add_argument("--showtime-id", default="",
+                     help="override if the URL shape is unrecognised")
+
     disc = sub.add_parser("discover")
     disc.add_argument("--date", required=True, help="YYYY-MM-DD")
     disc.add_argument("--limit", type=int, default=6000)
+    disc.add_argument("--film-id", default="", help="defaults to config film_id")
 
     args = parser.parse_args(argv)
     cfg = config_mod.load(args.config)
 
     handlers = {"check": cmd_check, "watch": cmd_watch, "dump": cmd_dump,
-                "discover": cmd_discover, "test-alert": cmd_test_alert}
+                "discover": cmd_discover, "test-alert": cmd_test_alert,
+                "add-showtime": cmd_add_showtime}
     return handlers[args.command](args, cfg)
 
 

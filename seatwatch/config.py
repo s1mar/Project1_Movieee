@@ -29,6 +29,7 @@ class Config:
     location_id: str = ""
     theatre_name: str = ""
     booking_url: str = ""
+    film_id: str = ""
     criteria: Criteria = field(default_factory=Criteria)
     showtimes: list[Showtime] = field(default_factory=list)
     interval_seconds: int = 45
@@ -59,6 +60,7 @@ def load(path: str | pathlib.Path | None = None) -> Config:
         location_id=str(theatre.get("location_id", theatre.get("id", ""))),
         theatre_name=theatre.get("name", ""),
         booking_url=theatre.get("booking_url", ""),
+        film_id=str(theatre.get("film_id", "")),
         criteria=Criteria(
             min_row=str(crit.get("min_row", "E")),
             max_row=str(crit["max_row"]) if crit.get("max_row") else None,
