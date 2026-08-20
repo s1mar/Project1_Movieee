@@ -32,6 +32,23 @@ class ExtractTests(unittest.TestCase):
                       "https%3A%2F%2Fx%2Fy%3FtheatreId%3D9406%26showtimeId%3D5150")
         self.assertEqual((got.theatre_id, got.showtime_id), ("9406", "5150"))
 
+    def test_real_cineplex_ticketing_preview_shape(self):
+        # The shape Cineplex actually uses for the seat preview page.
+        got = extract("https://www.cineplex.com/ticketing/preview"
+                      "?locationId=9406&showtimeId=778812")
+        self.assertEqual((got.theatre_id, got.showtime_id), ("9406", "778812"))
+        self.assertTrue(got.complete)
+
+    def test_preview_shape_with_extra_params_and_fragment(self):
+        got = extract("https://www.cineplex.com/ticketing/preview"
+                      "?lang=en&locationId=9406&showtimeId=778812&utm_source=x#seats")
+        self.assertEqual((got.theatre_id, got.showtime_id), ("9406", "778812"))
+
+    def test_preview_shape_theatreid_variant(self):
+        got = extract("https://www.cineplex.com/ticketing/preview"
+                      "?theatreId=9406&showtimeId=778812")
+        self.assertEqual((got.theatre_id, got.showtime_id), ("9406", "778812"))
+
     def test_unknown_shape_reports_candidates(self):
         got = extract("https://www.cineplex.com/weird/9406/thing/778812/")
         self.assertFalse(got.complete)
