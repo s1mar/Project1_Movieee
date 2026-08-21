@@ -73,6 +73,8 @@ jobs:
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           NTFY_SERVER: ${{ secrets.NTFY_SERVER }}
+          # Topic you type pause / resume / status into to control the watcher.
+          CONTROL_TOPIC: ${{ secrets.CONTROL_TOPIC }}
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
           CINEPLEX_API_KEY: ${{ secrets.CINEPLEX_API_KEY }}
           ALERT_ISSUE_NUMBER: ${{ vars.ALERT_ISSUE_NUMBER }}
@@ -107,6 +109,11 @@ jobs:
         env:
           DISPATCH_TOKEN: ${{ secrets.DISPATCH_TOKEN }}
         run: |
+          if [ -f state/paused ]; then
+            echo "Watcher is PAUSED (control topic); not re-chaining. The"
+            echo "5-minute cron keeps checking for a 'resume' command."
+            exit 0
+          fi
           if [ -z "$DISPATCH_TOKEN" ]; then
             echo "No DISPATCH_TOKEN secret; relying on the 5-minute cron."
             exit 0

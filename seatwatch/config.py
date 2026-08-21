@@ -63,10 +63,21 @@ class Config:
     base_url: str = "https://apis.cineplex.com"
     availability_path: str = ""
     layout_path: str = ""
+    control_since: str = "12h"
 
     @property
     def api_key(self) -> str:
         return os.environ.get("CINEPLEX_API_KEY", "")
+
+    @property
+    def control_topic(self) -> str:
+        # A topic you type pause/resume/status into. Kept in an env var /
+        # secret, not config, so it stays out of the public repo.
+        return os.environ.get("CONTROL_TOPIC", "")
+
+    @property
+    def ntfy_server(self) -> str:
+        return os.environ.get("NTFY_SERVER") or "https://ntfy.sh"
 
 
 def load(path: str | pathlib.Path | None = None) -> Config:
@@ -114,6 +125,7 @@ def load(path: str | pathlib.Path | None = None) -> Config:
         base_url=api.get("base_url", "https://apis.cineplex.com"),
         availability_path=api.get("availability_path", ""),
         layout_path=api.get("layout_path", ""),
+        control_since=str(raw.get("control", {}).get("since", "12h")),
     )
 
     # Never poll faster than every 20s - this is someone else's ticketing API.

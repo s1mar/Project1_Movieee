@@ -22,6 +22,7 @@ from .config import Showtime
 from .cineplex import (SEAT_AVAILABILITY, SEAT_LAYOUT, CineplexError, Client,
                        NotFound, PostShowtime)
 from .discovery import dates_ahead, describe_shape, find_showtimes
+from .control import is_paused, pending_status, read_commands
 from .notify import Alert, dispatch, resolve_deeplink
 from .seats import Match, extract_seats, match_seats, parse_seatmap
 from .urlparse_ids import extract as extract_ids
@@ -185,9 +186,56 @@ def plan_schedule(cfg, showtimes, now: float):
     return passes, int(interval), strides
 
 
+def _pause_marker(cfg) -> pathlib.Path:
+    return pathlib.Path(cfg.state_path).parent / "paused"
+
+
+def _check_control(cfg, state) -> bool:
+    """Read the control topic. Returns True if the watcher should pause.
+
+    A pause writes a marker file the workflow's re-dispatch step checks, so
+    the self-chain stops while paused (the 5-minute cron keeps checking for
+    a resume). A status command triggers a status push. No-op if no control
+    topic is set.
+    """
+    marker = _pause_marker(cfg)
+    marker.unlink(missing_ok=True)
+    if not cfg.control_topic:
+        return False
+    cmds = read_commands(cfg.control_topic, cfg.ntfy_server, cfg.control_since)
+
+    status = pending_status(cmds, state.data.get("last_status_ts", 0))
+    if status is not None:
+        _send_status(cfg, state, paused=is_paused(cmds))
+        state.data["last_status_ts"] = status.at
+        state.save()
+
+    if is_paused(cmds):
+        print("  control: PAUSED (send 'resume' to the control topic to "
+              "continue)")
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text("paused")
+        return True
+    return False
+
+
+def _send_status(cfg, state, paused: bool):
+    shows = state.data.get("showtimes", {})
+    tracked = [k for k in shows if k != "__watchlist__"]
+    watching = "PAUSED" if paused else "watching"
+    body = (f"{watching}: {len(cfg.showtimes)} showtime(s), rows "
+            f"{cfg.criteria.min_row}+ centre. Send pause / resume to control.")
+    dispatch(Alert(title=f"seatwatch status - {watching}", body=body,
+                   priority="default"))
+    print(f"  control: status sent ({watching})")
+
+
 def cmd_watch(args, cfg):
     client = _client(cfg)
     state = State.load(cfg.state_path)
+
+    if _check_control(cfg, state):
+        return 0
 
     discovered = discover_showtimes(cfg, client)
     known = {s.id for s in cfg.showtimes}

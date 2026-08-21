@@ -45,6 +45,15 @@ priority = "max"
 # the default handler for its links in Android settings.)
 android_app_package = ""
 
+[control]
+# Control the watcher from your phone. Set a CONTROL_TOPIC secret to a
+# second ntfy topic, subscribe to it in the app, and type commands into it:
+#   pause / stop   -> stop watching (and stop self-chaining) until resumed
+#   resume / start -> start watching again
+#   status         -> get a push back saying running/paused + what's watched
+# `since` is how far back each run reads for commands. No CONTROL_TOPIC = off.
+since = "12h"
+
 [poll]
 # Each run polls for ~5 minutes, then the workflow re-triggers itself (see
 # the DISPATCH_TOKEN step) so the next run starts in seconds. That keeps

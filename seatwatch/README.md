@@ -226,6 +226,26 @@ Send `{"event_type":"seatwatch-ping","client_payload":{"mode":"test-alert"}}`
 To stop, delete or pause the cron job; the workflow keeps running on its own
 schedule.
 
+## Control it from your phone (optional)
+
+ntfy is bidirectional — you can type into a topic, not just receive from it.
+Point the watcher at a **control topic** and command it from the ntfy app:
+
+1. Pick a second random topic (e.g. `odyssey-ctl-9f3a`), subscribe to it in
+   the app, and add it as a repo secret `CONTROL_TOPIC`.
+2. Type a command into that topic (the compose box at the bottom):
+   - **`pause`** (or `stop`) — the watcher stops watching *and* stops
+     self-chaining. Only the 5-minute cron keeps ticking, watching for a
+     resume, so it costs almost nothing while paused.
+   - **`resume`** (or `start`) — watching restarts and the fast chain
+     resumes on the next run.
+   - **`status`** — pushes back whether it's running or paused and what it's
+     watching.
+
+No token or credential goes into the messages — it's just you messaging a
+private topic that the watcher reads at the top of each run. The watcher's
+own alerts carry a title, so they're never mistaken for commands.
+
 ## Tests
 
 ```bash
