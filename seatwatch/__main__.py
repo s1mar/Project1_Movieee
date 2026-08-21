@@ -123,8 +123,12 @@ def discover_showtimes(cfg, client) -> list:
                                   cfg.discover_experiences):
             found.setdefault(hit.id, Showtime(
                 id=hit.id, label=hit.label, starts=hit.starts_at,
-                url=f"https://www.cineplex.com/ticketing/preview"
-                    f"?theatreId={location}&showtimeId={hit.id}"))
+                # Tap target is the app deep link; booking_url is the
+                # browser fallback. Both come straight from the feed.
+                url=hit.deeplink_url or hit.seat_map_url
+                    or f"https://www.cineplex.com/ticketing/preview"
+                       f"?theatreId={location}&showtimeId={hit.id}",
+                booking_url=hit.booking_url))
     if found:
         print(f"  discovered {len(found)} showtime(s) over "
               f"{cfg.discover_days} day(s)")
@@ -305,10 +309,11 @@ def _build_alert(cfg, showtime, matches, first_run):
         "",
         _describe(matches, limit=12),
         "",
-        "Cancellations go fast - book now.",
+        "Cancellations go fast - tap to open the app and grab it.",
     ]
     return Alert(title=title, body="\n".join(lines),
-                 url=showtime.url or cfg.booking_url, priority=cfg.priority)
+                 url=showtime.url or cfg.booking_url,
+                 booking_url=showtime.booking_url, priority=cfg.priority)
 
 
 def cmd_dump(args, cfg):

@@ -19,6 +19,7 @@ class Showtime:
     url: str = ""
     theatre_id: str = ""
     starts: str = ""  # ISO start datetime, for proximity-weighted polling.
+    booking_url: str = ""  # direct browser booking flow (fallback button)
 
     def key(self, default_theatre: str) -> str:
         return f"{self.theatre_id or default_theatre}:{self.id}"
@@ -95,7 +96,8 @@ def load(path: str | pathlib.Path | None = None) -> Config:
         showtimes=[
             Showtime(id=str(s["id"]), label=s.get("label", ""),
                      url=s.get("url", ""), theatre_id=str(s.get("theatre_id", "")),
-                     starts=str(s.get("starts", "")))
+                     starts=str(s.get("starts", "")),
+                     booking_url=str(s.get("booking_url", "")))
             for s in raw.get("showtimes", []) if s.get("id")
         ],
         interval_seconds=int(poll.get("interval_seconds", 45)),

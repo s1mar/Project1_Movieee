@@ -29,6 +29,8 @@ class Found:
     experiences: tuple = ()
     seats_remaining: int | None = None
     seat_map_url: str = ""
+    deeplink_url: str = ""   # opens the Cineplex app to this showtime
+    booking_url: str = ""    # straight into the browser booking flow
 
     @property
     def label(self) -> str:
@@ -100,6 +102,9 @@ def _add(out, session, film_id, film_name, types):
         experiences=types,
         seats_remaining=seats if isinstance(seats, int) else None,
         seat_map_url=str(session.get("seatMapUrl", "")),
+        deeplink_url=str(session.get("deeplinkUrl", "")),
+        booking_url=str(session.get("ticketingUrl", "")
+                        or session.get("ticketingRedesignUrl", "")),
     ))
 
 

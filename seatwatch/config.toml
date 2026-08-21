@@ -84,173 +84,202 @@ experiences = ["IMAX", "70mm"]
 # the route Cineplex's own site uses. It answers 401 without a key.
 
 # One block per screening. These 28 IMAX 70mm sessions were discovered
-# for 2026-08-21..27, with ISO start times so the closest showtimes get
-# polled most aggressively. With [discovery] on they refresh automatically.
+# for 2026-08-21..27. `url` is the Cineplex app deep link (tap opens the
+# app straight to the showtime); `booking_url` is the browser booking
+# flow. With [discovery] on they refresh automatically.
 
 [[showtimes]]
 id = "404523"
 label = "Fri 21 Aug, 11:00 AM (IMAX/70mm)"
 starts = "2026-08-21T11:00:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404523"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404523&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404523&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404522"
 label = "Fri 21 Aug, 2:45 PM (IMAX/70mm)"
 starts = "2026-08-21T14:45:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404522"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404522&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404522&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404521"
 label = "Fri 21 Aug, 6:45 PM (IMAX/70mm)"
 starts = "2026-08-21T18:45:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404521"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404521&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404521&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404520"
 label = "Fri 21 Aug, 10:40 PM (IMAX/70mm)"
 starts = "2026-08-21T22:40:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404520"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404520&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404520&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404524"
 label = "Sat 22 Aug, 11:00 AM (IMAX/70mm)"
 starts = "2026-08-22T11:00:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404524"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404524&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404524&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404525"
 label = "Sat 22 Aug, 2:45 PM (IMAX/70mm)"
 starts = "2026-08-22T14:45:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404525"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404525&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404525&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404526"
 label = "Sat 22 Aug, 6:45 PM (IMAX/70mm)"
 starts = "2026-08-22T18:45:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404526"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404526&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404526&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404527"
 label = "Sat 22 Aug, 10:40 PM (IMAX/70mm)"
 starts = "2026-08-22T22:40:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404527"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404527&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404527&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404528"
 label = "Sun 23 Aug, 11:00 AM (IMAX/70mm)"
 starts = "2026-08-23T11:00:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404528"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404528&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404528&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404529"
 label = "Sun 23 Aug, 2:45 PM (IMAX/70mm)"
 starts = "2026-08-23T14:45:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404529"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404529&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404529&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404530"
 label = "Sun 23 Aug, 6:45 PM (IMAX/70mm)"
 starts = "2026-08-23T18:45:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404530"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404530&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404530&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404531"
 label = "Sun 23 Aug, 10:40 PM (IMAX/70mm)"
 starts = "2026-08-23T22:40:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404531"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404531&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404531&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404532"
 label = "Mon 24 Aug, 10:30 AM (IMAX/70mm)"
 starts = "2026-08-24T10:30:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404532"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404532&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404532&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404533"
 label = "Mon 24 Aug, 2:20 PM (IMAX/70mm)"
 starts = "2026-08-24T14:20:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404533"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404533&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404533&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404534"
 label = "Mon 24 Aug, 6:20 PM (IMAX/70mm)"
 starts = "2026-08-24T18:20:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404534"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404534&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404534&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404535"
 label = "Mon 24 Aug, 10:15 PM (IMAX/70mm)"
 starts = "2026-08-24T22:15:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404535"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404535&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404535&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404539"
 label = "Tue 25 Aug, 11:00 AM (IMAX/70mm)"
 starts = "2026-08-25T11:00:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404539"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404539&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404539&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404538"
 label = "Tue 25 Aug, 2:45 PM (IMAX/70mm)"
 starts = "2026-08-25T14:45:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404538"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404538&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404538&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404537"
 label = "Tue 25 Aug, 6:45 PM (IMAX/70mm)"
 starts = "2026-08-25T18:45:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404537"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404537&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404537&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404536"
 label = "Tue 25 Aug, 10:40 PM (IMAX/70mm)"
 starts = "2026-08-25T22:40:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404536"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404536&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404536&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404540"
 label = "Wed 26 Aug, 10:30 AM (IMAX/70mm)"
 starts = "2026-08-26T10:30:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404540"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404540&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404540&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404541"
 label = "Wed 26 Aug, 2:20 PM (IMAX/70mm)"
 starts = "2026-08-26T14:20:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404541"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404541&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404541&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404542"
 label = "Wed 26 Aug, 6:20 PM (IMAX/70mm)"
 starts = "2026-08-26T18:20:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404542"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404542&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404542&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404543"
 label = "Wed 26 Aug, 10:15 PM (IMAX/70mm)"
 starts = "2026-08-26T22:15:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404543"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404543&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404543&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404547"
 label = "Thu 27 Aug, 10:30 AM (IMAX/70mm)"
 starts = "2026-08-27T10:30:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404547"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404547&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404547&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404546"
 label = "Thu 27 Aug, 2:20 PM (IMAX/70mm)"
 starts = "2026-08-27T14:20:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404546"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404546&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404546&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404545"
 label = "Thu 27 Aug, 6:20 PM (IMAX/70mm)"
 starts = "2026-08-27T18:20:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404545"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404545&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404545&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"
 
 [[showtimes]]
 id = "404544"
 label = "Thu 27 Aug, 10:15 PM (IMAX/70mm)"
 starts = "2026-08-27T22:15:00"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404544"
+url = "https://apis.cineplex.com/prod/cpx/theatrical/deeplink?s=404544&a=0000000001&l=9406&m=the-odyssey&ss=False"
+booking_url = "https://apis.cineplex.com/prod/ticketing/api/v1/routing/redirect-to-ticketing?VistaSessionId=404544&VISTAHOCategoryCode=0000000001&LocationId=9406&IsSeriesShowtime=False"

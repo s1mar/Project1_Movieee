@@ -16,7 +16,8 @@ TIMEOUT = 15
 class Alert:
     title: str
     body: str
-    url: str = ""
+    url: str = ""          # primary tap target: the app deep link
+    booking_url: str = ""  # secondary: straight into the browser booking flow
     priority: str = "high"
 
 
@@ -34,10 +35,18 @@ def send_ntfy(alert: Alert, topic: str, server: str = "https://ntfy.sh") -> None
         "Tags": "clapper,tickets",
         "Content-Type": "text/plain; charset=utf-8",
     }
+    actions = []
     if alert.url:
-        # Tapping the notification opens the seat picker directly.
+        # Tapping the notification opens the Cineplex app straight to this
+        # showtime (falls back to the website if the app isn't installed).
         headers["Click"] = alert.url
-        headers["Actions"] = f"view, Book now, {alert.url}"
+        actions.append(f"view, Open app, {alert.url}")
+    if alert.booking_url:
+        # A second button that goes straight into the browser booking flow.
+        actions.append(f"view, Book in browser, {alert.booking_url}")
+    if actions:
+        # ntfy allows up to 3 actions, semicolon-separated.
+        headers["Actions"] = "; ".join(actions[:3])
     _post(f"{server.rstrip('/')}/{topic}", alert.body.encode("utf-8"), headers)
 
 
