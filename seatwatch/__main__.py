@@ -316,38 +316,57 @@ def cmd_discover(args, cfg):
 
 
 def cmd_add_showtime(args, cfg):
-    """Turn a pasted seat-picker URL into a [[showtimes]] block."""
-    found = extract_ids(args.url)
-    if args.showtime_id:
-        found.showtime_id = args.showtime_id
-    theatre = found.theatre_id or cfg.theatre_id
-    if not found.showtime_id:
-        print("Could not find a showtime ID in that URL.")
-        if found.candidates:
-            print("Numbers I did find - if one is the showtime, pass it with "
-                  "--showtime-id:")
-            for key, value in found.candidates.items():
-                print(f"  {key} = {value}")
-        return 2
-    if found.theatre_id and cfg.theatre_id and found.theatre_id != cfg.theatre_id:
-        print(f"Note: URL theatre {found.theatre_id} differs from configured "
-              f"{cfg.theatre_id}; using the URL's.")
+    """Turn pasted seat-picker URLs into [[showtimes]] blocks.
 
-    block = ["", "[[showtimes]]", f'id = "{found.showtime_id}"']
-    if args.label:
-        block.append(f'label = "{args.label}"')
-    block.append(f'url = "{args.url.strip()}"')
-    if found.theatre_id and found.theatre_id != cfg.theatre_id:
-        block.append(f'theatre_id = "{found.theatre_id}"')
-    text = "\n".join(block) + "\n"
+    Accepts any number of URLs, in any amount of whitespace - so the output
+    of a browser console snippet, or a column copied off a page, can be
+    pasted straight in without splitting it up by hand.
+    """
+    raw = " ".join(args.url)
+    candidates = [u for u in raw.split() if u.strip()]
+    if not candidates:
+        print("No URLs given.")
+        return 2
 
     path = pathlib.Path(args.config) if args.config else config_mod.DEFAULT_PATH
-    with path.open("a") as fh:
-        fh.write(text)
-    print(f"Appended to {path}:{text}")
-    print(f"Now run:  python -m seatwatch dump --theatre {theatre} "
-          f"--showtime {found.showtime_id}")
-    return 0
+    existing = {s.id for s in cfg.showtimes}
+    added, skipped, failed = [], [], []
+
+    for url in candidates:
+        found = extract_ids(url)
+        if args.showtime_id and len(candidates) == 1:
+            found.showtime_id = args.showtime_id
+        if not found.showtime_id:
+            failed.append((url, found.candidates))
+            continue
+        if found.showtime_id in existing:
+            skipped.append(found.showtime_id)
+            continue
+        existing.add(found.showtime_id)
+
+        block = ["", "[[showtimes]]", f'id = "{found.showtime_id}"']
+        label = args.label if (args.label and len(candidates) == 1) else ""
+        if label:
+            block.append(f'label = "{label}"')
+        block.append(f'url = "{url}"')
+        if found.theatre_id and found.theatre_id != cfg.theatre_id:
+            block.append(f'theatre_id = "{found.theatre_id}"')
+        with path.open("a") as fh:
+            fh.write("\n".join(block) + "\n")
+        added.append(found.showtime_id)
+
+    if added:
+        print(f"Added {len(added)} showtime(s) to {path}: {', '.join(added)}")
+    if skipped:
+        print(f"Already present, skipped: {', '.join(skipped)}")
+    for url, cands in failed:
+        print(f"No showtime ID in: {url[:80]}")
+        if cands:
+            print("  numbers found: "
+                  + ", ".join(f"{k}={v}" for k, v in cands.items()))
+    if added:
+        print("\nNext: python -m seatwatch check")
+    return 0 if added or skipped else 2
 
 
 def cmd_test_alert(args, cfg):
@@ -379,8 +398,9 @@ def main(argv=None):
     d.add_argument("--limit", type=int, default=6000)
 
     add = sub.add_parser("add-showtime")
-    add.add_argument("--url", required=True,
-                     help="seat-picker URL copied from the address bar")
+    add.add_argument("--url", required=True, nargs="+",
+                     help="one or more seat-picker URLs; whitespace-separated "
+                          "blobs are split, so a whole paste works")
     add.add_argument("--label", default="", help='e.g. "Fri 21 Aug, 7:00 PM"')
     add.add_argument("--showtime-id", default="",
                      help="override if the URL shape is unrecognised")

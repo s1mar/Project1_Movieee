@@ -65,3 +65,24 @@ class ExtractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class MultiUrlPasteTests(unittest.TestCase):
+    """A pasted blob of URLs should not need splitting up by hand."""
+
+    BLOB = """https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=403871
+    https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=403872
+https://www.cineplex.com/ticketing/preview?locationId=9406&showtimeId=403873"""
+
+    def test_whitespace_separated_blob_yields_every_id(self):
+        ids = [extract(u).showtime_id for u in self.BLOB.split() if u.strip()]
+        self.assertEqual(ids, ["403871", "403872", "403873"])
+
+    def test_mixed_param_names_in_one_blob(self):
+        theatres = {extract(u).theatre_id for u in self.BLOB.split() if u.strip()}
+        self.assertEqual(theatres, {"9406"})
+
+    def test_junk_lines_are_isolated_not_fatal(self):
+        lines = self.BLOB.split() + ["https://example.com/nope", "garbage"]
+        good = [extract(u) for u in lines]
+        self.assertEqual(sum(1 for g in good if g.complete), 3)
