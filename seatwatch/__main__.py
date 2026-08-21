@@ -119,7 +119,8 @@ def discover_showtimes(cfg, client) -> list:
             print(f"  discovery failed for {date}: {str(exc)[:120]}")
             continue
         sample = sample if sample is not None else payload
-        for hit in find_showtimes(payload, cfg.film_id):
+        for hit in find_showtimes(payload, cfg.film_id,
+                                  cfg.discover_experiences):
             found.setdefault(hit.id, Showtime(
                 id=hit.id, label=hit.label,
                 url=f"https://www.cineplex.com/ticketing/preview"

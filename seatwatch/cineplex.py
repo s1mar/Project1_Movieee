@@ -20,14 +20,24 @@ from dataclasses import dataclass, field
 DEFAULT_BASE = "https://apis.cineplex.com"
 SEAT_AVAILABILITY = "/prod/ticketing/api/v1/theatre/{theatre_id}/showtime/{showtime_id}/seat-availability"
 SEAT_LAYOUT = "/prod/ticketing/api/v1/theatre/{theatre_id}/showtime/{showtime_id}/seat-layout"
-# Taken from the route table in Cineplex's own ecommerce bundle, so this is
-# the path their site uses rather than a guess. Gated behind the API key.
-SHOWTIMES = "/prod/cpx/theatrical/api/v1/theatres/{location_id}/showtimes/{date}"
+# Confirmed against the live feed: the showtimes list is a query, not a path.
+# Gated behind the API key. Returns a list of theatre blocks.
+SHOWTIMES = "/prod/cpx/theatrical/api/v1/showtimes"
 
 # Identify the watcher honestly rather than impersonating a browser, and
 # leave a contact path in the string.
 USER_AGENT = ("seatwatch/1.0 (personal seat-availability watcher; "
               "+https://github.com/s1mar/Project1_Movieee)")
+
+
+def _read_body(resp) -> str:
+    """Decode a response body, transparently gunzipping if the server
+    gzipped it despite us not asking (observed on the showtimes feed)."""
+    raw = resp.read()
+    if resp.headers.get("Content-Encoding", "").lower() == "gzip" or raw[:2] == b"\x1f\x8b":
+        import gzip
+        raw = gzip.decompress(raw)
+    return raw.decode("utf-8")
 
 
 class CineplexError(RuntimeError):
@@ -71,7 +81,7 @@ class Client:
             req = urllib.request.Request(url, headers=self._headers())
             try:
                 with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                    return json.loads(resp.read().decode("utf-8"))
+                    return json.loads(_read_body(resp))
             except urllib.error.HTTPError as exc:
                 body = exc.read().decode("utf-8", "replace")[:200]
                 if exc.code == 404:
@@ -115,7 +125,10 @@ class Client:
         return layout, availability
 
     def showtimes(self, location_id: str, date: str,
-                  path: str = SHOWTIMES, language: str = "en") -> dict:
-        """Showtimes for a theatre on a date (YYYY-MM-DD). Needs an API key."""
-        return self.get(path.format(location_id=location_id, date=date),
-                        {"language": language})
+                  path: str = SHOWTIMES, language: str = "en"):
+        """Showtimes for a theatre on a date (YYYY-MM-DD). Needs an API key.
+
+        Returns the raw payload, a list of theatre blocks.
+        """
+        return self.get(path, {"locationId": location_id, "date": date,
+                               "language": language})

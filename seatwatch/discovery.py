@@ -1,26 +1,23 @@
-"""Find every showtime for a film at a theatre over the next N days.
+"""Find showtimes for a film at a theatre over the next N days.
 
-The showtimes feed is the one Cineplex endpoint that *does* require a
-subscription key - the open ticketing endpoints only answer questions about
-a showtime you can already name. So this runs only when CINEPLEX_API_KEY is
+Parses the real Cineplex showtimes payload (captured live). The feed is
+key-gated - it needs CINEPLEX_API_KEY - so discovery only runs when a key is
 set, and the watcher falls back to hand-listed showtimes otherwise.
 
-The response shape has not been observed (no key was available when this was
-written), so parsing is deliberately loose and `seatwatch discover` dumps the
-raw payload to make adapting it a one-liner.
+Payload shape (list-rooted):
+    [ { theatre, theatreId, dates: [ { startDate, movies: [ {
+          id, name, presentationType,
+          experiences: [ { experienceTypes: [...], sessions: [ {
+              vistaSessionId, showStartDateTime, seatsRemaining,
+              isInThePast, isSoldOut, isReservedSeating, seatMapUrl, ...
+          } ] } ]
+    } ] } ] } ]
 """
 
 from __future__ import annotations
 
 import datetime
-import re
-from dataclasses import dataclass
-
-_ID_KEYS = ("showtimeid", "sessionid", "vistasessionid", "id")
-_TIME_KEYS = ("showstarttime", "startdatetime", "showtime", "starttime",
-              "sessiondatetime", "datetime", "startsat")
-_FILM_KEYS = ("filmid", "movieid", "vistafilmid", "parentfilmid")
-_TIME_RE = re.compile(r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}")
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
@@ -28,92 +25,103 @@ class Found:
     id: str
     starts_at: str = ""
     film_id: str = ""
+    film_name: str = ""
+    experiences: tuple = ()
+    seats_remaining: int | None = None
+    seat_map_url: str = ""
 
     @property
     def label(self) -> str:
-        if not self.starts_at:
-            return f"showtime {self.id}"
+        exp = "/".join(self.experiences)
+        when = self.starts_at
         try:
-            dt = datetime.datetime.fromisoformat(self.starts_at[:19])
-            return dt.strftime("%a %-d %b, %-I:%M %p")
+            when = datetime.datetime.fromisoformat(
+                self.starts_at[:19]).strftime("%a %-d %b, %-I:%M %p")
         except ValueError:
-            return self.starts_at
+            pass
+        return f"{when} ({exp})" if exp else when or f"showtime {self.id}"
 
 
-def _lower(d: dict) -> dict:
-    return {k.lower(): v for k, v in d.items()}
+def _as_list(node):
+    return node if isinstance(node, list) else [node] if node else []
 
 
-def find_showtimes(payload, film_id: str = "") -> list[Found]:
-    """Every showtime-looking record in a showtimes payload."""
+def find_showtimes(payload, film_id: str = "",
+                   want_experiences: tuple = ()) -> list[Found]:
+    """Every showtime for the film, optionally filtered by experience.
+
+    want_experiences: e.g. ("IMAX", "70mm") keeps only sessions whose
+    experienceTypes contain ALL of those. Empty keeps every experience.
+    """
     out: dict[str, Found] = {}
-    _walk(payload, film_id, inherited_film="", out=out)
+    for theatre in _as_list(payload):
+        if not isinstance(theatre, dict):
+            continue
+        for date in _as_list(theatre.get("dates")):
+            if not isinstance(date, dict):
+                continue
+            for movie in _as_list(date.get("movies")):
+                if not isinstance(movie, dict):
+                    continue
+                mid = str(movie.get("id", ""))
+                if film_id and mid != str(film_id):
+                    continue
+                name = str(movie.get("name", ""))
+                for exp in _as_list(movie.get("experiences")):
+                    if not isinstance(exp, dict):
+                        continue
+                    types = tuple(str(t) for t in
+                                  _as_list(exp.get("experienceTypes")))
+                    if want_experiences and not all(
+                            w in types for w in want_experiences):
+                        continue
+                    for s in _as_list(exp.get("sessions")):
+                        _add(out, s, mid, name, types)
     return sorted(out.values(), key=lambda f: (f.starts_at, f.id))
 
 
-def _walk(node, want_film: str, inherited_film: str, out: dict) -> None:
-    if isinstance(node, list):
-        for item in node:
-            _walk(item, want_film, inherited_film, out)
+def _add(out, session, film_id, film_name, types):
+    if not isinstance(session, dict):
         return
-    if not isinstance(node, dict):
+    if session.get("isInThePast"):
+        return  # Already screened; nothing to watch.
+    if session.get("isReservedSeating") is False:
+        return  # General admission - no seat map to watch.
+    sid = session.get("vistaSessionId")
+    if sid in (None, ""):
         return
-
-    low = _lower(node)
-    film = ""
-    for key in _FILM_KEYS:
-        if low.get(key) not in (None, ""):
-            film = str(low[key])
-            break
-    film = film or inherited_film
-
-    start = ""
-    for key in _TIME_KEYS:
-        value = low.get(key)
-        if isinstance(value, str) and _TIME_RE.match(value):
-            start = value
-            break
-
-    if start:
-        for key in _ID_KEYS:
-            value = low.get(key)
-            if value not in (None, "") and str(value).isdigit():
-                if not want_film or film == str(want_film):
-                    sid = str(value)
-                    out.setdefault(sid, Found(id=sid, starts_at=start,
-                                              film_id=film))
-                break
-
-    for value in node.values():
-        _walk(value, want_film, film, out)
+    sid = str(sid)
+    seats = session.get("seatsRemaining")
+    out.setdefault(sid, Found(
+        id=sid,
+        starts_at=str(session.get("showStartDateTime", "")),
+        film_id=str(film_id),
+        film_name=film_name,
+        experiences=types,
+        seats_remaining=seats if isinstance(seats, int) else None,
+        seat_map_url=str(session.get("seatMapUrl", "")),
+    ))
 
 
 def dates_ahead(days: int, today: datetime.date | None = None) -> list[str]:
-    """ISO dates from today through `days` (inclusive of today)."""
     start = today or datetime.date.today()
     return [(start + datetime.timedelta(days=i)).isoformat()
             for i in range(max(1, days))]
 
 
 def describe_shape(node, depth: int = 0, max_depth: int = 4) -> list[str]:
-    """A keys-and-types outline of a payload, without the payload.
-
-    When discovery parses nothing, this goes to the log so the mismatch can
-    be diagnosed from a CI run. It deliberately prints structure, never
-    values, so nothing sensitive ends up in a public build log.
-    """
+    """Keys-and-types outline of a payload, values omitted. For CI logs."""
     pad = "  " * depth
     if depth >= max_depth:
         return [f"{pad}..."]
     if isinstance(node, dict):
         lines = []
         for key, value in list(node.items())[:12]:
-            kind = type(value).__name__
             if isinstance(value, (dict, list)):
-                lines.append(f"{pad}{key}: {kind}[{len(value)}]")
+                lines.append(f"{pad}{key}: {type(value).__name__}[{len(value)}]")
                 lines.extend(describe_shape(value, depth + 1, max_depth))
             else:
-                lines.append(f"{pad}{key}: {kind}")
+                lines.append(f"{pad}{key}: {type(value).__name__}")
         if len(node) > 12:
             lines.append(f"{pad}... +{len(node) - 12} more keys")
         return lines

@@ -18,7 +18,7 @@ location_id = "9406"
 name = "Cinema Banque Scotia Montreal"
 booking_url = "https://www.cineplex.com/movie/imax70-the-odyssey-the-imax-experience-in-7"
 # The Odyssey: The IMAX Experience in 70MM Film. Used by `discover` to filter.
-film_id = "38376"
+film_id = "37617"  # id in the showtimes feed (parent page id is 38376)
 
 [criteria]
 # Row E and further back. Rows A-D are too close for 70mm IMAX.
@@ -71,18 +71,152 @@ layout_path = ""
 # off (or the key missing), only the [[showtimes]] blocks below are watched.
 enabled = true
 days = 7
+# Only IMAX 70mm sessions, not the regular or plain-70mm screenings.
+experiences = ["IMAX", "70mm"]
 
 # Discovery hits /prod/cpx/theatrical/api/v1/theatres/{id}/showtimes/{date},
 # the route Cineplex's own site uses. It answers 401 without a key.
 
-# One block per screening you want watched. Discovery adds to these, it does
-# not replace them.
-# [[showtimes]]
-# id = "123456"
-# label = "Fri 21 Aug, 7:00 PM"
-# url = "https://www.cineplex.com/..."   # tapping the push opens this
+# One block per screening. These 28 IMAX 70mm sessions were discovered
+# for 2026-08-21..27. With [discovery] on they refresh automatically;
+# they are seeded here so the watcher still works without the key.
 
 [[showtimes]]
-id = "403870"
-label = "The Odyssey IMAX 70mm"
-url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=403870&dbox=false"
+id = "404523"
+label = "Fri 21 Aug, 11:00 AM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404523"
+
+[[showtimes]]
+id = "404522"
+label = "Fri 21 Aug, 2:45 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404522"
+
+[[showtimes]]
+id = "404521"
+label = "Fri 21 Aug, 6:45 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404521"
+
+[[showtimes]]
+id = "404520"
+label = "Fri 21 Aug, 10:40 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404520"
+
+[[showtimes]]
+id = "404524"
+label = "Sat 22 Aug, 11:00 AM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404524"
+
+[[showtimes]]
+id = "404525"
+label = "Sat 22 Aug, 2:45 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404525"
+
+[[showtimes]]
+id = "404526"
+label = "Sat 22 Aug, 6:45 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404526"
+
+[[showtimes]]
+id = "404527"
+label = "Sat 22 Aug, 10:40 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404527"
+
+[[showtimes]]
+id = "404528"
+label = "Sun 23 Aug, 11:00 AM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404528"
+
+[[showtimes]]
+id = "404529"
+label = "Sun 23 Aug, 2:45 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404529"
+
+[[showtimes]]
+id = "404530"
+label = "Sun 23 Aug, 6:45 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404530"
+
+[[showtimes]]
+id = "404531"
+label = "Sun 23 Aug, 10:40 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404531"
+
+[[showtimes]]
+id = "404532"
+label = "Mon 24 Aug, 10:30 AM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404532"
+
+[[showtimes]]
+id = "404533"
+label = "Mon 24 Aug, 2:20 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404533"
+
+[[showtimes]]
+id = "404534"
+label = "Mon 24 Aug, 6:20 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404534"
+
+[[showtimes]]
+id = "404535"
+label = "Mon 24 Aug, 10:15 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404535"
+
+[[showtimes]]
+id = "404539"
+label = "Tue 25 Aug, 11:00 AM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404539"
+
+[[showtimes]]
+id = "404538"
+label = "Tue 25 Aug, 2:45 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404538"
+
+[[showtimes]]
+id = "404537"
+label = "Tue 25 Aug, 6:45 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404537"
+
+[[showtimes]]
+id = "404536"
+label = "Tue 25 Aug, 10:40 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404536"
+
+[[showtimes]]
+id = "404540"
+label = "Wed 26 Aug, 10:30 AM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404540"
+
+[[showtimes]]
+id = "404541"
+label = "Wed 26 Aug, 2:20 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404541"
+
+[[showtimes]]
+id = "404542"
+label = "Wed 26 Aug, 6:20 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404542"
+
+[[showtimes]]
+id = "404543"
+label = "Wed 26 Aug, 10:15 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404543"
+
+[[showtimes]]
+id = "404547"
+label = "Thu 27 Aug, 10:30 AM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404547"
+
+[[showtimes]]
+id = "404546"
+label = "Thu 27 Aug, 2:20 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404546"
+
+[[showtimes]]
+id = "404545"
+label = "Thu 27 Aug, 6:20 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404545"
+
+[[showtimes]]
+id = "404544"
+label = "Thu 27 Aug, 10:15 PM (IMAX/70mm)"
+url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404544"
