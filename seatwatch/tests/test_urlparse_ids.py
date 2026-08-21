@@ -86,3 +86,26 @@ https://www.cineplex.com/ticketing/preview?locationId=9406&showtimeId=403873"""
         lines = self.BLOB.split() + ["https://example.com/nope", "garbage"]
         good = [extract(u) for u in lines]
         self.assertEqual(sum(1 for g in good if g.complete), 3)
+
+
+class BareIdTests(unittest.TestCase):
+    """Reading numbers off a page is less work than copying whole URLs."""
+
+    def test_bare_numeric_id(self):
+        got = extract("403870")
+        self.assertEqual(got.showtime_id, "403870")
+        self.assertTrue(got.complete or got.showtime_id)
+
+    def test_trailing_comma_is_tolerated(self):
+        self.assertEqual(extract("403872,").showtime_id, "403872")
+
+    def test_surrounding_punctuation_is_stripped(self):
+        for token in ("(403872)", "'403872'", "[403872]", "403872;"):
+            self.assertEqual(extract(token).showtime_id, "403872", token)
+
+    def test_bare_id_carries_no_theatre(self):
+        # The configured theatre fills this in when the block is written.
+        self.assertEqual(extract("403870").theatre_id, "")
+
+    def test_non_numeric_token_is_not_an_id(self):
+        self.assertEqual(extract("garbage").showtime_id, "")

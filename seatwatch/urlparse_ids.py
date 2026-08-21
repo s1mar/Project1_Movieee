@@ -35,7 +35,14 @@ class Extracted:
 
 def extract(url: str) -> Extracted:
     result = Extracted(candidates={})
-    parsed = urllib.parse.urlparse(url.strip())
+    token = url.strip().strip(",;|'\"()[]")
+
+    # A bare showtime id is the least you can be asked to supply: reading
+    # numbers off a page beats copying whole URLs.
+    if token.isdigit():
+        return Extracted(theatre_id="", showtime_id=token, candidates={})
+
+    parsed = urllib.parse.urlparse(token)
 
     for pattern in _PAIR_PATTERNS:
         m = pattern.search(parsed.path)

@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
+import re
 import sys
 import time
 
@@ -322,8 +323,10 @@ def cmd_add_showtime(args, cfg):
     of a browser console snippet, or a column copied off a page, can be
     pasted straight in without splitting it up by hand.
     """
+    # Split on commas as well as whitespace: "403871, 403872" is how people
+    # actually type a list of ids.
     raw = " ".join(args.url)
-    candidates = [u for u in raw.split() if u.strip()]
+    candidates = [u for u in re.split(r"[\s,]+", raw) if u.strip()]
     if not candidates:
         print("No URLs given.")
         return 2
@@ -348,7 +351,11 @@ def cmd_add_showtime(args, cfg):
         label = args.label if (args.label and len(candidates) == 1) else ""
         if label:
             block.append(f'label = "{label}"')
-        block.append(f'url = "{url}"')
+        link = url if url.startswith("http") else (
+            f"https://www.cineplex.com/ticketing/preview"
+            f"?theatreId={found.theatre_id or cfg.theatre_id}"
+            f"&showtimeId={found.showtime_id}")
+        block.append(f'url = "{link}"')
         if found.theatre_id and found.theatre_id != cfg.theatre_id:
             block.append(f'theatre_id = "{found.theatre_id}"')
         with path.open("a") as fh:
@@ -399,8 +406,8 @@ def main(argv=None):
 
     add = sub.add_parser("add-showtime")
     add.add_argument("--url", required=True, nargs="+",
-                     help="one or more seat-picker URLs; whitespace-separated "
-                          "blobs are split, so a whole paste works")
+                     help="one or more seat-picker URLs OR bare showtime ids; "
+                          "whitespace-separated blobs are split")
     add.add_argument("--label", default="", help='e.g. "Fri 21 Aug, 7:00 PM"')
     add.add_argument("--showtime-id", default="",
                      help="override if the URL shape is unrecognised")
