@@ -6,8 +6,16 @@ on:
   schedule:
     # Every 5 minutes is the fastest GitHub allows. Actual firing is
     # best-effort and often runs late under load, which is why a single run
-    # polls repeatedly instead of taking one snapshot.
+    # polls for ~50 minutes instead of taking one snapshot.
     - cron: '*/5 * * * *'
+  # External-pinger backstop. A free 1-minute cron service (cron-job.org,
+  # UptimeRobot, ...) can POST to the repo's dispatches endpoint to fire this
+  # reliably, independent of GitHub's flaky internal scheduler. With the
+  # concurrency guard below, a ping during an active run just keeps one run
+  # pending, so if a run ever dies the next ping restarts it within a minute
+  # rather than waiting up to an hour for the next cron. See seatwatch/README.
+  repository_dispatch:
+    types: [seatwatch-ping]
   workflow_dispatch:
     inputs:
       mode:
@@ -71,7 +79,7 @@ jobs:
           # Only wire up the issue channel when an issue is nominated,
           # otherwise every alert would open a brand new issue.
           GITHUB_TOKEN: ${{ vars.ALERT_ISSUE_NUMBER && secrets.GITHUB_TOKEN || '' }}
-        run: python -m seatwatch ${{ inputs.mode || 'watch' }}
+        run: python -m seatwatch ${{ inputs.mode || github.event.client_payload.mode || 'watch' }}
 
       - name: Persist state
         # Runs even if polling failed, so a partial pass is not re-alerted.
