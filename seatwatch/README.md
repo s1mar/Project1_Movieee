@@ -187,35 +187,40 @@ never accumulates history). A seat that flickers is suppressed for
 | `python -m seatwatch discover --date YYYY-MM-DD` | List showtimes (needs API key) |
 | `python -m seatwatch test-alert` | Prove the push path works |
 
-## Faster / more reliable triggering (optional)
+## Closing the gaps (optional)
 
-Each run already polls continuously for ~50 minutes and the `concurrency`
-guard chains them, so coverage is near-continuous off GitHub's own cron. If
-you want a reliability backstop that doesn't depend on GitHub's (often late)
-scheduler, point a free 1-minute external cron at the repo's dispatch
-endpoint. The workflow already listens for it (`repository_dispatch` type
-`seatwatch-ping`); a ping during an active run just keeps one run pending,
-so if a run ever dies the next ping restarts it within a minute.
+Runs are chained by `concurrency`, but GitHub's scheduler can go silent for
+over an hour, leaving a gap where nothing is watching. Two ways to close it,
+both needing the same fine-grained token — pick one.
 
-**1. Make a fine-grained token.** GitHub → Settings → Developer settings →
-Fine-grained tokens → Generate. Scope it to **this repo only**, with
-**Contents: read** and **Actions: read and write**. Copy the token.
+**Make the token first (both options use it).** GitHub → Settings →
+Developer settings → Fine-grained tokens → Generate. Scope to **this repo
+only**, **Contents: read** + **Actions: read and write**. Copy it.
 
-**2. Point a cron service at the dispatch endpoint.** On
-[cron-job.org](https://cron-job.org) (free) or similar, create a job that
-runs **every minute**:
+### Option A — self-chaining (one secret, no external service) ← simplest
+
+Add the token as a repo secret named `DISPATCH_TOKEN` (Settings → Secrets
+and variables → Actions). That's the whole setup. At the end of every run
+the workflow re-triggers itself, so the next run starts in seconds instead
+of waiting on GitHub's cron. The `*/5` cron stays as a backstop for the rare
+case a run dies before it can re-trigger.
+
+### Option B — external pinger (independent of GitHub entirely)
+
+Keep the token out of the repo and drive it from a free 1-minute cron
+service ([cron-job.org](https://cron-job.org), UptimeRobot, ...). It fires
+even if a run has crashed. Create a job running **every minute**:
 
 - **URL:** `https://api.github.com/repos/s1mar/Project1_Movieee/dispatches`
 - **Method:** `POST`
-- **Headers:**
-  - `Accept: application/vnd.github+json`
-  - `Authorization: Bearer <your fine-grained token>`
-  - `X-GitHub-Api-Version: 2022-11-28`
+- **Headers:** `Accept: application/vnd.github+json`,
+  `Authorization: Bearer <token>`, `X-GitHub-Api-Version: 2022-11-28`
 - **Body:** `{"event_type":"seatwatch-ping"}`
 
-That's it — the token lives in the cron service, never in this repo. Send
-`{"event_type":"seatwatch-ping","client_payload":{"mode":"test-alert"}}`
-once to confirm the wiring fires a push.
+Either way, once reliable triggering is in place the run duration can be cut
+right down (`duration_seconds`), so it stops being a near-permanent job.
+Send `{"event_type":"seatwatch-ping","client_payload":{"mode":"test-alert"}}`
+(Option B) once to confirm a push arrives.
 
 To stop, delete or pause the cron job; the workflow keeps running on its own
 schedule.
