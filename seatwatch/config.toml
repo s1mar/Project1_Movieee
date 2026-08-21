@@ -21,13 +21,18 @@ booking_url = "https://www.cineplex.com/movie/imax70-the-odyssey-the-imax-experi
 film_id = "37617"  # id in the showtimes feed (parent page id is 38376)
 
 [criteria]
-# Row E and further back. Rows A-D are too close for 70mm IMAX.
-min_row = "E"
+# Loosened from E to D: row D is still a fine 70mm IMAX seat, and the free
+# seats cluster in the front rows, so this catches far more. Raise back to
+# "E" to hold out for the back half only.
+min_row = "D"
 # Optional back limit, e.g. "L". Empty means no limit.
 max_row = ""
-# 0.0 = dead centre of the row, 1.0 = the outermost seat.
-# 0.5 keeps the middle half; drop to 0.3 to be fussier about "the middle".
-max_centre_offset = 0.5
+# 0.0 = dead centre of the row, 1.0 = the outermost seat. Set to 0.85: the
+# genuinely central back-half seats for this release are all sold, so the
+# only free ones sit at offset 0.75+. This catches the best available
+# without alerting on the far corners (0.9-1.0). Drop back toward 0.5 to
+# hold out for a true-centre cancellation.
+max_centre_offset = 0.85
 # Wheelchair and companion seats are left for people who need them.
 include_accessible = false
 # Raise to 2 to only hear about pairs of seats side by side.
