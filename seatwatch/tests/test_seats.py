@@ -146,16 +146,3 @@ class AndroidIntentTests(unittest.TestCase):
         from seatwatch.notify import resolve_deeplink
         self.assertEqual(resolve_deeplink("https://x/y"), "https://x/y")
 
-    def test_android_intent_wraps_with_package_and_fallback(self):
-        from seatwatch.notify import android_intent_url
-        out = android_intent_url("https://www.cineplex.com/Movie/x?a=1",
-                                 "com.fivemobile.cineplex")
-        self.assertTrue(out.startswith("intent://www.cineplex.com/Movie/x"))
-        self.assertIn("package=com.fivemobile.cineplex", out)
-        self.assertIn("S.browser_fallback_url=", out)
-        self.assertIn("scheme=https", out)
-
-    def test_android_intent_noop_without_package(self):
-        from seatwatch.notify import android_intent_url
-        self.assertEqual(
-            android_intent_url("https://x/y", ""), "https://x/y")

@@ -22,7 +22,7 @@ from .config import Showtime
 from .cineplex import (SEAT_AVAILABILITY, SEAT_LAYOUT, CineplexError, Client,
                        NotFound, PostShowtime)
 from .discovery import dates_ahead, describe_shape, find_showtimes
-from .notify import Alert, android_intent_url, dispatch, resolve_deeplink
+from .notify import Alert, dispatch, resolve_deeplink
 from .seats import Match, extract_seats, match_seats, parse_seatmap
 from .urlparse_ids import extract as extract_ids
 from .state import State
@@ -311,10 +311,14 @@ def _build_alert(cfg, showtime, matches, first_run):
         "",
         "Cancellations go fast - tap to open the app and grab it.",
     ]
-    # Tap target: prefer an Android intent that launches the app directly.
-    web = resolve_deeplink(showtime.url) if showtime.url else cfg.booking_url
-    tap = (android_intent_url(web, cfg.android_app_package)
-           if cfg.android_app_package else (showtime.url or cfg.booking_url))
+    # Tap target: the clean www.cineplex.com page for this showtime. An
+    # Android intent:// that force-launches the app was tried and reverted -
+    # the Cineplex app registers no handler for it ("No Activity found"), and
+    # ntfy doesn't honor the intent's browser fallback, so it errored instead
+    # of opening anything. A plain https link reliably opens the page (with
+    # the site's own "Continue in App" button), and opens the app directly if
+    # the user has set Cineplex as the default handler for its links.
+    tap = resolve_deeplink(showtime.url) if showtime.url else cfg.booking_url
     return Alert(title=title, body="\n".join(lines), url=tap,
                  booking_url=showtime.booking_url, priority=cfg.priority)
 

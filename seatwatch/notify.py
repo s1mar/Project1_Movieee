@@ -21,23 +21,6 @@ class Alert:
     priority: str = "high"
 
 
-def android_intent_url(web_url: str, package: str) -> str:
-    """Wrap an https URL in an Android intent:// link that forces `package`
-    to handle it, falling back to the browser if the app isn't installed.
-
-    ntfy opens the notification's Click target with ACTION_VIEW; a plain
-    https link lets Android pick the browser, but an intent:// with an
-    explicit package launches the app directly (one tap instead of the
-    web page's 'Continue in App' button).
-    """
-    if not (web_url.startswith("https://") and package):
-        return web_url
-    rest = web_url[len("https://"):]
-    fallback = urllib.parse.quote(web_url, safe="")
-    return (f"intent://{rest}#Intent;scheme=https;"
-            f"package={package};S.browser_fallback_url={fallback};end")
-
-
 def resolve_deeplink(deeplink_url: str) -> str:
     """Turn the feed's apis.cineplex.com deeplink into the www.cineplex.com
     page it redirects to, so the app (which registers www links, not the api
