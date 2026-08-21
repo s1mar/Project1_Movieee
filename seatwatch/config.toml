@@ -39,6 +39,10 @@ min_adjacent = 1
 # cancellation actually wakes you. Drop to "high" for a normal loud
 # notification that respects DND.
 priority = "max"
+# When set, the tap target becomes an Android intent:// link that launches
+# this app package directly instead of opening the web page. Empty = plain
+# web link. com.fivemobile.cineplex is the Cineplex Android app.
+android_app_package = "com.fivemobile.cineplex"
 
 [poll]
 # Each run polls for ~5 minutes, then the workflow re-triggers itself (see

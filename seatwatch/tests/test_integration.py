@@ -71,12 +71,20 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         length = int(self.headers.get("Content-Length", 0))
+        raw = self.rfile.read(length).decode()
+        # seatwatch now publishes to ntfy as JSON (topic/title/message/...).
+        data = json.loads(raw) if raw.strip().startswith("{") else {}
+        priority = data.get("priority", "")
         STATE["pushes"].append({
             "path": self.path,
-            "title": self.headers.get("Title", ""),
-            "priority": self.headers.get("Priority", ""),
-            "click": self.headers.get("Click", ""),
-            "body": self.rfile.read(length).decode(),
+            "topic": data.get("topic", ""),
+            "title": data.get("title", ""),
+            # Map the numeric ntfy priority back to a label for the tests.
+            "priority": {5: "max", 4: "high", 3: "default",
+                         2: "low", 1: "min"}.get(priority, str(priority)),
+            "click": data.get("click", ""),
+            "actions": data.get("actions", []),
+            "body": data.get("message", ""),
         })
         self.send_response(200)
         self.send_header("Content-Length", "0")
@@ -174,7 +182,7 @@ url = "https://example.invalid/seats"
         self.run_cli("watch")
         self.assertEqual(len(STATE["pushes"]), 1)
         push = STATE["pushes"][0]
-        self.assertIn("/test-topic", push["path"])
+        self.assertEqual(push["topic"], "test-topic")
         self.assertIn("1 seat", push["title"])
         self.assertIn("E8", push["body"])
         self.assertEqual(push["click"], "https://example.invalid/seats")

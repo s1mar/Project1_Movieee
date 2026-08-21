@@ -48,6 +48,7 @@ class Config:
     booking_url: str = ""
     film_id: str = ""
     priority: str = "high"
+    android_app_package: str = ""  # e.g. com.fivemobile.cineplex -> app-open link
     criteria: Criteria = field(default_factory=Criteria)
     showtimes: list[Showtime] = field(default_factory=list)
     interval_seconds: int = 45
@@ -86,6 +87,7 @@ def load(path: str | pathlib.Path | None = None) -> Config:
         booking_url=theatre.get("booking_url", ""),
         film_id=str(theatre.get("film_id", "")),
         priority=str(alerts.get("priority", "high")),
+        android_app_package=str(alerts.get("android_app_package", "")),
         criteria=Criteria(
             min_row=str(crit.get("min_row", "E")),
             max_row=str(crit["max_row"]) if crit.get("max_row") else None,

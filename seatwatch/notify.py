@@ -21,33 +21,81 @@ class Alert:
     priority: str = "high"
 
 
+def android_intent_url(web_url: str, package: str) -> str:
+    """Wrap an https URL in an Android intent:// link that forces `package`
+    to handle it, falling back to the browser if the app isn't installed.
+
+    ntfy opens the notification's Click target with ACTION_VIEW; a plain
+    https link lets Android pick the browser, but an intent:// with an
+    explicit package launches the app directly (one tap instead of the
+    web page's 'Continue in App' button).
+    """
+    if not (web_url.startswith("https://") and package):
+        return web_url
+    rest = web_url[len("https://"):]
+    fallback = urllib.parse.quote(web_url, safe="")
+    return (f"intent://{rest}#Intent;scheme=https;"
+            f"package={package};S.browser_fallback_url={fallback};end")
+
+
+def resolve_deeplink(deeplink_url: str) -> str:
+    """Turn the feed's apis.cineplex.com deeplink into the www.cineplex.com
+    page it redirects to, so the app (which registers www links, not the api
+    host) can catch it. Returns the input unchanged if it isn't a deeplink.
+    """
+    parsed = urllib.parse.urlparse(deeplink_url)
+    if "/deeplink" not in parsed.path:
+        return deeplink_url
+    q = urllib.parse.parse_qs(parsed.query)
+    def one(k, default=""):
+        return (q.get(k) or [default])[0]
+    slug = one("m", "the-odyssey")
+    params = urllib.parse.urlencode({
+        "deepLinkToSession": "true", "filmSlug": slug,
+        "VistaSessionId": one("s"), "VistaHOCategoryCode": one("a"),
+        "LocationId": one("l"), "IsSeriesShowtime": one("ss", "False"),
+    })
+    return f"https://www.cineplex.com/Movie/{slug}?{params}"
+
+
 def _post(url: str, data: bytes, headers: dict[str, str]) -> None:
     req = urllib.request.Request(url, data=data, headers=headers, method="POST")
     with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
         resp.read()
 
 
+_PRIORITY_MAP = {"max": 5, "urgent": 5, "high": 4, "default": 3,
+                 "low": 2, "min": 1}
+
+
 def send_ntfy(alert: Alert, topic: str, server: str = "https://ntfy.sh") -> None:
-    """Push to an ntfy topic. Topic name is the only secret, so keep it odd."""
-    headers = {
-        "Title": alert.title,
-        "Priority": alert.priority,
-        "Tags": "clapper,tickets",
-        "Content-Type": "text/plain; charset=utf-8",
+    """Push to an ntfy topic via JSON publish.
+
+    JSON is used rather than HTTP headers because the tap target can be an
+    Android intent:// URL, whose ';' and '#' characters are not valid in a
+    header value (ntfy rejects them with 400).
+    """
+    payload = {
+        "topic": topic,
+        "title": alert.title,
+        "message": alert.body,
+        "priority": _PRIORITY_MAP.get(alert.priority.lower(), 4),
+        "tags": ["clapper", "tickets"],
     }
     actions = []
     if alert.url:
         # Tapping the notification opens the Cineplex app straight to this
         # showtime (falls back to the website if the app isn't installed).
-        headers["Click"] = alert.url
-        actions.append(f"view, Open app, {alert.url}")
+        payload["click"] = alert.url
+        actions.append({"action": "view", "label": "Open app",
+                        "url": alert.url})
     if alert.booking_url:
-        # A second button that goes straight into the browser booking flow.
-        actions.append(f"view, Book in browser, {alert.booking_url}")
+        actions.append({"action": "view", "label": "Book in browser",
+                        "url": alert.booking_url})
     if actions:
-        # ntfy allows up to 3 actions, semicolon-separated.
-        headers["Actions"] = "; ".join(actions[:3])
-    _post(f"{server.rstrip('/')}/{topic}", alert.body.encode("utf-8"), headers)
+        payload["actions"] = actions[:3]
+    _post(server.rstrip("/"), json.dumps(payload).encode("utf-8"),
+          {"Content-Type": "application/json"})
 
 
 def send_webhook(alert: Alert, webhook_url: str) -> None:
