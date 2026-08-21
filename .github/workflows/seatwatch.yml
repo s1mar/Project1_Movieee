@@ -27,7 +27,9 @@ permissions:
 jobs:
   poll:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Each run polls for ~50 min (duration_seconds), so allow headroom.
+    # Public repo => Actions minutes are free, so long runs cost nothing.
+    timeout-minutes: 58
     steps:
       - uses: actions/checkout@v4
 
