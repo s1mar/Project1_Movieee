@@ -99,7 +99,7 @@ jobs:
         # Re-trigger the workflow so the next run starts immediately instead
         # of waiting for GitHub's scheduler (observed going silent for 85+
         # min). Needs a PAT in the DISPATCH_TOKEN secret (fine-grained, this
-        # repo, Contents: read + Actions: read/write). With no token this
+        # repo, Contents: read/write + Actions: read/write). With no token this
         # no-ops and the */5 cron stays the only trigger. The concurrency
         # guard keeps just one run pending, so this can't pile up; the cron
         # remains as a backstop if a run ever dies before reaching here.

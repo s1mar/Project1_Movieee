@@ -195,7 +195,8 @@ both needing the same fine-grained token — pick one.
 
 **Make the token first (both options use it).** GitHub → Settings →
 Developer settings → Fine-grained tokens → Generate. Scope to **this repo
-only**, **Contents: read** + **Actions: read and write**. Copy it.
+only**, **Contents: read and write** + **Actions: read and write**. (The
+repository-dispatch endpoint needs Contents *write*, not just read.) Copy it.
 
 ### Option A — self-chaining (one secret, no external service) ← simplest
 
