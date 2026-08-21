@@ -41,13 +41,13 @@ min_adjacent = 1
 priority = "max"
 
 [poll]
-# Each run polls continuously for ~50 minutes, not a brief snapshot. GitHub
-# fires the 5-minute cron unreliably (often 20-60 min late), so a short run
-# leaves big blind spots; a long one plus the workflow's concurrency guard
-# (at most one run pending) means the next run starts as soon as this ends,
-# giving near-continuous coverage regardless of cron lateness.
+# Each run polls for ~5 minutes, then the workflow re-triggers itself (see
+# the DISPATCH_TOKEN step) so the next run starts in seconds. That keeps
+# coverage continuous without any single job running for ages. Without the
+# token this falls back to short runs on the 5-minute cron - gappier, but
+# not an always-on job. Raise this if you'd rather fewer, longer runs.
 interval_seconds = 45
-duration_seconds = 3000
+duration_seconds = 300
 # Do not re-alert about the same seat for 6 hours.
 cooldown_seconds = 21600
 # Tell me about seats that are already free the very first time this runs.
@@ -56,13 +56,12 @@ state_path = "state/state.json"
 # After this many consecutive failed polls, send a "seatwatch is broken"
 # notice. Otherwise a dead endpoint looks exactly like a sold-out show.
 health_warn_after = 3
-# Cap on seat requests per ~50-minute run. The run spends this on the
-# soonest showtimes first: imminent shows (< 12h) polled every pass, nearer
-# days less often, later-in-week a single baseline check. 450 over 50 min is
-# ~9/min; with runs chained back-to-back that is ~540 requests/hour at the
-# ceiling and usually far less. It works out to the imminent shows being
-# checked roughly every 75 seconds, continuously. Lower to be gentler.
-max_requests_per_run = 450
+# Cap on seat requests per ~5-minute run. Spent on the soonest showtimes
+# first: imminent shows (< 12h) polled every pass, nearer days less often,
+# later-in-week a single baseline check. 90 over 5 min, chained, keeps the
+# imminent shows checked roughly every 50 seconds continuously (~540
+# requests/hour at the ceiling, usually less). Lower to be gentler.
+max_requests_per_run = 90
 
 [api]
 base_url = "https://apis.cineplex.com"
