@@ -52,10 +52,12 @@ state_path = "state/state.json"
 # After this many consecutive failed polls, send a "seatwatch is broken"
 # notice. Otherwise a dead endpoint looks exactly like a sold-out show.
 health_warn_after = 3
-# Cap on seat requests per run. Watching a week of slots at the
-# single-showtime cadence would be thousands of requests an hour against
-# Cineplex; the run spreads whatever passes it can afford instead.
-max_requests_per_run = 30
+# Cap on seat requests per run. The run spends this budget on the soonest
+# showtimes first: imminent shows (< 12h) are polled every pass, shows in
+# the next couple of days less often, and later-in-the-week shows get a
+# single baseline check. 60/run is ~720 requests/hour at the very worst and
+# usually far less. Lower it to be gentler; raise it to poll harder.
+max_requests_per_run = 60
 
 [api]
 base_url = "https://apis.cineplex.com"
@@ -78,145 +80,173 @@ experiences = ["IMAX", "70mm"]
 # the route Cineplex's own site uses. It answers 401 without a key.
 
 # One block per screening. These 28 IMAX 70mm sessions were discovered
-# for 2026-08-21..27. With [discovery] on they refresh automatically;
-# they are seeded here so the watcher still works without the key.
+# for 2026-08-21..27, with ISO start times so the closest showtimes get
+# polled most aggressively. With [discovery] on they refresh automatically.
 
 [[showtimes]]
 id = "404523"
 label = "Fri 21 Aug, 11:00 AM (IMAX/70mm)"
+starts = "2026-08-21T11:00:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404523"
 
 [[showtimes]]
 id = "404522"
 label = "Fri 21 Aug, 2:45 PM (IMAX/70mm)"
+starts = "2026-08-21T14:45:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404522"
 
 [[showtimes]]
 id = "404521"
 label = "Fri 21 Aug, 6:45 PM (IMAX/70mm)"
+starts = "2026-08-21T18:45:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404521"
 
 [[showtimes]]
 id = "404520"
 label = "Fri 21 Aug, 10:40 PM (IMAX/70mm)"
+starts = "2026-08-21T22:40:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404520"
 
 [[showtimes]]
 id = "404524"
 label = "Sat 22 Aug, 11:00 AM (IMAX/70mm)"
+starts = "2026-08-22T11:00:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404524"
 
 [[showtimes]]
 id = "404525"
 label = "Sat 22 Aug, 2:45 PM (IMAX/70mm)"
+starts = "2026-08-22T14:45:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404525"
 
 [[showtimes]]
 id = "404526"
 label = "Sat 22 Aug, 6:45 PM (IMAX/70mm)"
+starts = "2026-08-22T18:45:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404526"
 
 [[showtimes]]
 id = "404527"
 label = "Sat 22 Aug, 10:40 PM (IMAX/70mm)"
+starts = "2026-08-22T22:40:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404527"
 
 [[showtimes]]
 id = "404528"
 label = "Sun 23 Aug, 11:00 AM (IMAX/70mm)"
+starts = "2026-08-23T11:00:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404528"
 
 [[showtimes]]
 id = "404529"
 label = "Sun 23 Aug, 2:45 PM (IMAX/70mm)"
+starts = "2026-08-23T14:45:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404529"
 
 [[showtimes]]
 id = "404530"
 label = "Sun 23 Aug, 6:45 PM (IMAX/70mm)"
+starts = "2026-08-23T18:45:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404530"
 
 [[showtimes]]
 id = "404531"
 label = "Sun 23 Aug, 10:40 PM (IMAX/70mm)"
+starts = "2026-08-23T22:40:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404531"
 
 [[showtimes]]
 id = "404532"
 label = "Mon 24 Aug, 10:30 AM (IMAX/70mm)"
+starts = "2026-08-24T10:30:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404532"
 
 [[showtimes]]
 id = "404533"
 label = "Mon 24 Aug, 2:20 PM (IMAX/70mm)"
+starts = "2026-08-24T14:20:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404533"
 
 [[showtimes]]
 id = "404534"
 label = "Mon 24 Aug, 6:20 PM (IMAX/70mm)"
+starts = "2026-08-24T18:20:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404534"
 
 [[showtimes]]
 id = "404535"
 label = "Mon 24 Aug, 10:15 PM (IMAX/70mm)"
+starts = "2026-08-24T22:15:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404535"
 
 [[showtimes]]
 id = "404539"
 label = "Tue 25 Aug, 11:00 AM (IMAX/70mm)"
+starts = "2026-08-25T11:00:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404539"
 
 [[showtimes]]
 id = "404538"
 label = "Tue 25 Aug, 2:45 PM (IMAX/70mm)"
+starts = "2026-08-25T14:45:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404538"
 
 [[showtimes]]
 id = "404537"
 label = "Tue 25 Aug, 6:45 PM (IMAX/70mm)"
+starts = "2026-08-25T18:45:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404537"
 
 [[showtimes]]
 id = "404536"
 label = "Tue 25 Aug, 10:40 PM (IMAX/70mm)"
+starts = "2026-08-25T22:40:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404536"
 
 [[showtimes]]
 id = "404540"
 label = "Wed 26 Aug, 10:30 AM (IMAX/70mm)"
+starts = "2026-08-26T10:30:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404540"
 
 [[showtimes]]
 id = "404541"
 label = "Wed 26 Aug, 2:20 PM (IMAX/70mm)"
+starts = "2026-08-26T14:20:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404541"
 
 [[showtimes]]
 id = "404542"
 label = "Wed 26 Aug, 6:20 PM (IMAX/70mm)"
+starts = "2026-08-26T18:20:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404542"
 
 [[showtimes]]
 id = "404543"
 label = "Wed 26 Aug, 10:15 PM (IMAX/70mm)"
+starts = "2026-08-26T22:15:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404543"
 
 [[showtimes]]
 id = "404547"
 label = "Thu 27 Aug, 10:30 AM (IMAX/70mm)"
+starts = "2026-08-27T10:30:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404547"
 
 [[showtimes]]
 id = "404546"
 label = "Thu 27 Aug, 2:20 PM (IMAX/70mm)"
+starts = "2026-08-27T14:20:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404546"
 
 [[showtimes]]
 id = "404545"
 label = "Thu 27 Aug, 6:20 PM (IMAX/70mm)"
+starts = "2026-08-27T18:20:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404545"
 
 [[showtimes]]
 id = "404544"
 label = "Thu 27 Aug, 10:15 PM (IMAX/70mm)"
+starts = "2026-08-27T22:15:00"
 url = "https://www.cineplex.com/ticketing/preview?theatreId=9406&showtimeId=404544"

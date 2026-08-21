@@ -123,20 +123,25 @@ because the showtimes feed is the one Cineplex endpoint that requires a key
 can already name. Without the key it prints why and falls back to the
 `[[showtimes]]` blocks, rather than failing.
 
-Polling every showtime on every pass does not scale. A week of slots at the
-single-showtime cadence would be ~2,300 requests an hour against someone
-else's ticketing API. Each run gets a `max_requests_per_run` budget and
-spreads whatever passes it can afford across its window:
+Polling every showtime on every pass does not scale — a week of slots at the
+single-showtime cadence would be thousands of requests an hour. So each run
+gets a `max_requests_per_run` budget and **spends it on the soonest shows
+first**, because a cancellation for tonight matters more and there is less
+time to catch it:
 
-| Showtimes | Passes | Interval | Requests/hour |
-|---|---|---|---|
-| 1 | 7 | 45s | ~84 |
-| 4 | 7 | 45s | ~336 |
-| 12 | 2 | 135s | ~288 |
-| 28 | 1 | 45s | ~336 |
+| Time until showtime | Poll frequency |
+|---|---|
+| < 12 h (imminent) | every pass — hardest |
+| < 48 h | every 2nd pass |
+| < 7 days | every 3rd pass |
+| further / unknown | a single baseline check per run |
 
-So a single showtime is still checked every 45 seconds, and a week of slots
-each get checked about once per cron fire, with total load roughly flat.
+Pass 1 always polls everything, so every show gets at least one check per
+cron fire; the remaining budget goes to the near ones. With the default
+budget of 60 and this week's 28 slots, the soonest show is polled ~every
+67 s (~48×/hour) while next Thursday's gets ~2×/run. As each show approaches
+it climbs the tiers automatically — the scheduler recomputes proximity every
+run. Lower `max_requests_per_run` to be gentler, raise it to poll harder.
 
 ## Criteria
 

@@ -122,7 +122,7 @@ def discover_showtimes(cfg, client) -> list:
         for hit in find_showtimes(payload, cfg.film_id,
                                   cfg.discover_experiences):
             found.setdefault(hit.id, Showtime(
-                id=hit.id, label=hit.label,
+                id=hit.id, label=hit.label, starts=hit.starts_at,
                 url=f"https://www.cineplex.com/ticketing/preview"
                     f"?theatreId={location}&showtimeId={hit.id}"))
     if found:
@@ -138,21 +138,47 @@ def discover_showtimes(cfg, client) -> list:
     return list(found.values())
 
 
-def plan_cadence(cfg, showtime_count: int) -> tuple[int, int]:
-    """How many passes to make, and how long to wait between them.
+# Poll stride by how soon a show starts: imminent shows are polled every
+# pass, distant ones only occasionally. A cancellation for tonight is worth
+# far more than one for next week, and there is less time to catch it.
+_PROXIMITY_STRIDES = ((12, 1), (48, 2), (168, 3))
+_FAR_STRIDE = 6
 
-    Polling every showtime on every pass does not scale: a week of slots at
-    the single-showtime cadence would be thousands of requests an hour
-    against someone else's ticketing API. The run gets a request budget and
-    spreads whatever passes it can afford across its duration instead.
+
+def _stride_for(hours: float) -> int:
+    for limit, stride in _PROXIMITY_STRIDES:
+        if hours < limit:
+            return stride
+    return _FAR_STRIDE
+
+
+def _requests_over(strides: list[int], passes: int) -> int:
+    # A show with stride s is polled on passes 1, 1+s, 1+2s, ... so over
+    # `passes` passes it is hit ((passes-1)//s + 1) times. Pass 1 always
+    # polls everything, guaranteeing each show a baseline check per run.
+    return sum((passes - 1) // s + 1 for s in strides)
+
+
+def plan_schedule(cfg, showtimes, now: float):
+    """Return (passes, interval, strides) weighting closer shows heavier.
+
+    strides[i] is how often showtime[i] is polled: every pass, every 2nd,
+    etc., set by proximity. The number of passes is the most the run can
+    afford within max_requests_per_run; closer shows therefore get polled
+    many times per run while distant ones get a single baseline check.
     """
-    count = max(1, showtime_count)
-    affordable = max(1, cfg.max_requests_per_run // count)
-    by_time = max(1, cfg.duration_seconds // cfg.interval_seconds + 1)
-    passes = min(affordable, by_time)
-    interval = (max(cfg.interval_seconds, cfg.duration_seconds // passes)
-                if passes > 1 else cfg.interval_seconds)
-    return passes, int(interval)
+    interval = cfg.interval_seconds
+    max_passes = max(1, cfg.duration_seconds // interval + 1)
+    strides = [_stride_for(s.hours_until(now)) for s in showtimes]
+
+    passes = 1
+    for p in range(max_passes, 0, -1):
+        if _requests_over(strides, p) <= cfg.max_requests_per_run:
+            passes = p
+            break
+    if passes > 1:
+        interval = max(cfg.interval_seconds, cfg.duration_seconds // passes)
+    return passes, int(interval), strides
 
 
 def cmd_watch(args, cfg):
@@ -168,9 +194,13 @@ def cmd_watch(args, cfg):
               "or enable [discovery] with an API key.")
         return 2
 
-    passes_planned, interval = plan_cadence(cfg, len(cfg.showtimes))
-    print(f"{len(cfg.showtimes)} showtime(s): {passes_planned} pass(es) "
-          f"every {interval}s (budget {cfg.max_requests_per_run} req/run)")
+    now = time.time()
+    passes_planned, interval, strides = plan_schedule(cfg, cfg.showtimes, now)
+    stride_of = {s.id: strides[i] for i, s in enumerate(cfg.showtimes)}
+    imminent = sum(1 for v in strides if v == 1)
+    print(f"{len(cfg.showtimes)} showtime(s): up to {passes_planned} pass(es) "
+          f"every {interval}s (budget {cfg.max_requests_per_run} req/run); "
+          f"{imminent} imminent show(s) polled every pass")
 
     deadline = time.time() + cfg.duration_seconds
     live_keys = {s.key(cfg.theatre_id) for s in cfg.showtimes}
@@ -180,8 +210,13 @@ def cmd_watch(args, cfg):
 
     while True:
         passes += 1
-        print(f"[pass {passes}] {time.strftime('%H:%M:%S')}")
-        for showtime in cfg.showtimes:
+        # Pass 1 polls everything; later passes poll only shows whose stride
+        # divides the pass, so imminent shows get checked far more often.
+        due = [s for s in cfg.showtimes
+               if (passes - 1) % stride_of[s.id] == 0]
+        print(f"[pass {passes}] {time.strftime('%H:%M:%S')} "
+              f"polling {len(due)}/{len(cfg.showtimes)}")
+        for showtime in due:
             key = showtime.key(cfg.theatre_id)
             try:
                 matches, _, healthy = poll_once(cfg, client, showtime)

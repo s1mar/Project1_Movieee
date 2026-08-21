@@ -18,9 +18,25 @@ class Showtime:
     label: str = ""
     url: str = ""
     theatre_id: str = ""
+    starts: str = ""  # ISO start datetime, for proximity-weighted polling.
 
     def key(self, default_theatre: str) -> str:
         return f"{self.theatre_id or default_theatre}:{self.id}"
+
+    def hours_until(self, now: float) -> float:
+        """Hours from `now` (epoch seconds) until the show starts.
+
+        Returns a large sentinel when the start time is unknown, so
+        unknowns are treated as far-off rather than imminent.
+        """
+        if not self.starts:
+            return 1e6
+        import datetime
+        try:
+            dt = datetime.datetime.fromisoformat(self.starts[:19])
+        except ValueError:
+            return 1e6
+        return (dt.timestamp() - now) / 3600.0
 
 
 @dataclass
@@ -78,7 +94,8 @@ def load(path: str | pathlib.Path | None = None) -> Config:
         ),
         showtimes=[
             Showtime(id=str(s["id"]), label=s.get("label", ""),
-                     url=s.get("url", ""), theatre_id=str(s.get("theatre_id", "")))
+                     url=s.get("url", ""), theatre_id=str(s.get("theatre_id", "")),
+                     starts=str(s.get("starts", "")))
             for s in raw.get("showtimes", []) if s.get("id")
         ],
         interval_seconds=int(poll.get("interval_seconds", 45)),
