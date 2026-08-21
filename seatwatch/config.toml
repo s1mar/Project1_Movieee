@@ -51,8 +51,12 @@ android_app_package = ""
 #   pause / stop   -> stop watching (and stop self-chaining) until resumed
 #   resume / start -> start watching again
 #   status         -> get a push back saying running/paused + what's watched
-# `since` is how far back each run reads for commands. No CONTROL_TOPIC = off.
+# `since` is how far back each run reads for commands.
 since = "12h"
+# Control topic (committed so it works with zero setup). Public, so anyone
+# reading the repo could send pause/resume - fine here. Set a CONTROL_TOPIC
+# secret to override with a private topic.
+topic = "odyssey-seatwatch-ctl-533428b8"
 
 [poll]
 # Each run polls for ~5 minutes, then the workflow re-triggers itself (see

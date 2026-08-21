@@ -64,6 +64,7 @@ class Config:
     availability_path: str = ""
     layout_path: str = ""
     control_since: str = "12h"
+    control_topic_cfg: str = ""
 
     @property
     def api_key(self) -> str:
@@ -71,9 +72,12 @@ class Config:
 
     @property
     def control_topic(self) -> str:
-        # A topic you type pause/resume/status into. Kept in an env var /
-        # secret, not config, so it stays out of the public repo.
-        return os.environ.get("CONTROL_TOPIC", "")
+        # Topic you type pause/resume/status into. Prefer the CONTROL_TOPIC
+        # secret (private); fall back to the value committed in config.toml.
+        # The committed one is readable in a public repo, so anyone could
+        # send pause/resume - fine for a personal seat watcher; set the
+        # secret to keep the channel private.
+        return os.environ.get("CONTROL_TOPIC") or self.control_topic_cfg
 
     @property
     def ntfy_server(self) -> str:
@@ -126,6 +130,7 @@ def load(path: str | pathlib.Path | None = None) -> Config:
         availability_path=api.get("availability_path", ""),
         layout_path=api.get("layout_path", ""),
         control_since=str(raw.get("control", {}).get("since", "12h")),
+        control_topic_cfg=str(raw.get("control", {}).get("topic", "")),
     )
 
     # Never poll faster than every 20s - this is someone else's ticketing API.
