@@ -22,7 +22,7 @@ from .config import Showtime
 from .cineplex import (SEAT_AVAILABILITY, SEAT_LAYOUT, CineplexError, Client,
                        NotFound, PostShowtime)
 from .discovery import dates_ahead, describe_shape, find_showtimes
-from .control import is_paused, pending_status, read_commands
+from .control import PAUSE, RESUME, STATUS, read_commands
 from .notify import Alert, dispatch, resolve_deeplink
 from .seats import Match, extract_seats, match_seats, parse_seatmap
 from .urlparse_ids import extract as extract_ids
@@ -191,26 +191,42 @@ def _pause_marker(cfg) -> pathlib.Path:
 
 
 def _check_control(cfg, state) -> bool:
-    """Read the control topic. Returns True if the watcher should pause.
+    """Apply control commands and return True if the watcher should pause.
 
-    A pause writes a marker file the workflow's re-dispatch step checks, so
-    the self-chain stops while paused (the 5-minute cron keeps checking for
-    a resume). A status command triggers a status push. No-op if no control
-    topic is set.
+    The pause state is DURABLE: it lives in the persisted state, not derived
+    from the control topic each run. A command only needs to be seen once -
+    ntfy caches messages briefly, so re-deriving state every run would silently
+    un-pause as soon as the message aged out of the cache (this bit us). Each
+    run reads only commands newer than a stored cursor, updates the persisted
+    flag, and advances the cursor. A pause writes a marker file the workflow's
+    re-chain step checks, so the self-chain stops while paused.
     """
     marker = _pause_marker(cfg)
     marker.unlink(missing_ok=True)
-    if not cfg.control_topic:
-        return False
-    cmds = read_commands(cfg.control_topic, cfg.ntfy_server, cfg.control_since)
 
-    status = pending_status(cmds, state.data.get("last_status_ts", 0))
-    if status is not None:
-        _send_status(cfg, state, paused=is_paused(cmds))
-        state.data["last_status_ts"] = status.at
+    ctrl = state.data.setdefault("control", {})
+    paused = bool(ctrl.get("paused", False))
+    cursor = float(ctrl.get("cursor", 0.0))
+
+    if cfg.control_topic:
+        cmds = read_commands(cfg.control_topic, cfg.ntfy_server, cfg.control_since)
+        fresh = [c for c in cmds if c.at > cursor]
+        newest_status = None
+        for c in fresh:  # oldest first, so the last pause/resume wins
+            if c.kind == PAUSE:
+                paused = True
+            elif c.kind == RESUME:
+                paused = False
+            elif c.kind == STATUS:
+                newest_status = c
+            cursor = max(cursor, c.at)
+        if newest_status is not None:
+            _send_status(cfg, state, paused=paused)
+        ctrl["paused"], ctrl["cursor"] = paused, cursor
+        state.data["control"] = ctrl
         state.save()
 
-    if is_paused(cmds):
+    if paused:
         print("  control: PAUSED (send 'resume' to the control topic to "
               "continue)")
         marker.parent.mkdir(parents=True, exist_ok=True)
