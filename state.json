@@ -1,0 +1,237 @@
+{
+  "control": {
+    "cursor": 1787407111.0,
+    "paused": true
+  },
+  "showtimes": {
+    "9406:404520": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273660.5563922,
+      "last_checked": 1787397214.1674922,
+      "last_health_warning": 1787388285.000543
+    },
+    "9406:404521": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273660.2519364,
+      "last_checked": 1787397214.001015,
+      "last_health_warning": 1787388284.4642506
+    },
+    "9406:404522": {
+      "alerted": {
+        "G20": 1787313056.3557456,
+        "G21": 1787313056.3557456
+      },
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273659.9000173,
+      "last_checked": 1787397213.8652823,
+      "last_health_warning": 1787388283.9194252
+    },
+    "9406:404523": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273659.411735,
+      "last_checked": 1787397213.7288795,
+      "last_health_warning": 1787388283.309675
+    },
+    "9406:404524": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273660.8126392,
+      "last_checked": 1787407186.650251,
+      "last_health_warning": 1787388285.615566
+    },
+    "9406:404525": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273661.1007574,
+      "last_checked": 1787407186.915242,
+      "last_health_warning": 1787388286.2835867
+    },
+    "9406:404526": {
+      "alerted": {
+        "K15": 1787402823.200508,
+        "K16": 1787402823.200508
+      },
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273661.3362193,
+      "last_checked": 1787407187.1874394,
+      "last_health_warning": 1787388286.8248012
+    },
+    "9406:404527": {
+      "alerted": {
+        "E9": 1787401532.3866444,
+        "J31": 1787275859.1929731
+      },
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273661.7189095,
+      "last_checked": 1787407187.317074,
+      "last_health_warning": 1787388393.6955328
+    },
+    "9406:404528": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273661.9446864,
+      "last_checked": 1787407187.4540622,
+      "last_health_warning": 1787388394.2518902
+    },
+    "9406:404529": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273662.305142,
+      "last_checked": 1787407187.6102452,
+      "last_health_warning": 1787388394.795926
+    },
+    "9406:404530": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273662.5371346,
+      "last_checked": 1787407187.7358873,
+      "last_health_warning": 1787388395.3384302
+    },
+    "9406:404531": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273662.7740092,
+      "last_checked": 1787407187.8683536,
+      "last_health_warning": 1787388395.9461877
+    },
+    "9406:404532": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273663.0598314,
+      "last_checked": 1787407188.091376,
+      "last_health_warning": 1787397215.476356
+    },
+    "9406:404533": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273663.2926528,
+      "last_checked": 1787407122.4483662
+    },
+    "9406:404534": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273663.6414216,
+      "last_checked": 1787407122.5751588
+    },
+    "9406:404535": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273663.9640687,
+      "last_checked": 1787407122.8087904
+    },
+    "9406:404536": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273665.1707132,
+      "last_checked": 1787407123.9682026
+    },
+    "9406:404537": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273664.754824,
+      "last_checked": 1787407123.7062993
+    },
+    "9406:404538": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273664.5328026,
+      "last_checked": 1787407123.477393
+    },
+    "9406:404539": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273664.2324975,
+      "last_checked": 1787407123.1246932
+    },
+    "9406:404540": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273665.6170764,
+      "last_checked": 1787407124.178079
+    },
+    "9406:404541": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273666.0151653,
+      "last_checked": 1787407124.4826715
+    },
+    "9406:404542": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273666.3132155,
+      "last_checked": 1787407124.8206446
+    },
+    "9406:404543": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273666.5248923,
+      "last_checked": 1787407125.0404122
+    },
+    "9406:404544": {
+      "alerted": {
+        "D29": 1787275868.946835,
+        "D30": 1787275868.946835
+      },
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273667.6225219,
+      "last_checked": 1787407126.0413218
+    },
+    "9406:404545": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273667.393663,
+      "last_checked": 1787407125.6731262
+    },
+    "9406:404546": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273667.08427,
+      "last_checked": 1787407125.4611554
+    },
+    "9406:404547": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": 1787273666.7431052,
+      "last_checked": 1787407125.2621741
+    },
+    "__watchlist__": {
+      "alerted": {},
+      "available": [],
+      "failures": 0,
+      "first_seen": null,
+      "last_health_warning": 1787270487.3170567
+    }
+  },
+  "version": 1
+}
